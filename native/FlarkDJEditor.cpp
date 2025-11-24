@@ -197,8 +197,8 @@ FlarkDJEditor::FlarkDJEditor(FlarkDJProcessor& p)
 
     // Enable resizing with constraints (AFTER all components are initialized)
     setResizable(true, true);
-    setResizeLimits(1200, 950, 1800, 1400);
-    setSize(1400, 1020);
+    setResizeLimits(800, 750, 1400, 1100);
+    setSize(950, 900);
 }
 
 FlarkDJEditor::~FlarkDJEditor()
@@ -261,9 +261,9 @@ void FlarkDJEditor::paint(juce::Graphics& g)
     g.fillRect(0, 80, getWidth(), 3);
 
     // Calculate section sizes based on current window size (same scaling as resized())
-    float scale = getWidth() / 1400.0f;
-    int sectionWidth = static_cast<int>(400 * scale);
-    int sectionHeight = static_cast<int>(400 * scale);  // Scaled proportionally
+    float scale = getWidth() / 950.0f;
+    int sectionWidth = static_cast<int>(300 * scale);
+    int sectionHeight = static_cast<int>(280 * scale);
 
     // Section borders
     juce::Colour borderColour = orangeGlow.withAlpha(0.7f);
@@ -310,7 +310,7 @@ void FlarkDJEditor::resized()
     area.removeFromTop(83); // Logo area + accent line
 
     // Scale all dimensions based on window width
-    float scale = getWidth() / 1400.0f;
+    float scale = getWidth() / 950.0f;
 
     // ========== TOP BAR - Preset Manager & Snapshots ==========
     auto topBar = area.removeFromTop(static_cast<int>(45 * scale));
@@ -337,20 +337,20 @@ void FlarkDJEditor::resized()
     area.removeFromTop(static_cast<int>(5 * scale));
 
     // Scaled dimensions (all controls scale proportionally)
-    int sectionWidth = static_cast<int>(400 * scale);
-    int sectionHeight = static_cast<int>(400 * scale);
+    int sectionWidth = static_cast<int>(300 * scale);
+    int sectionHeight = static_cast<int>(280 * scale);
     int spacing = static_cast<int>(10 * scale);
-    int padding = static_cast<int>(15 * scale);
+    int padding = static_cast<int>(12 * scale);
 
-    // Scaled control sizes
-    int buttonHeight = static_cast<int>(20 * scale);      // 66% of original 30px
-    int largeKnobSize = static_cast<int>(120 * scale);    // Filter knobs
-    int mediumKnobSize = static_cast<int>(100 * scale);   // Reverb/Delay/Flanger/LFO knobs
-    int comboHeight = static_cast<int>(20 * scale);       // 66% of original 26-30px
-    int sliderHeight = static_cast<int>(50 * scale);      // Isolator position slider
-    int smallSpacing = static_cast<int>(10 * scale);
-    int mediumSpacing = static_cast<int>(15 * scale);
-    int titleSpace = static_cast<int>(25 * scale);
+    // Scaled control sizes (knobs reduced by 50%)
+    int buttonHeight = static_cast<int>(18 * scale);
+    int largeKnobSize = static_cast<int>(60 * scale);     // Filter knobs (was 120)
+    int mediumKnobSize = static_cast<int>(50 * scale);    // Reverb/Delay/Flanger/LFO knobs (was 100)
+    int comboHeight = static_cast<int>(18 * scale);
+    int sliderHeight = static_cast<int>(40 * scale);      // Isolator position slider
+    int smallSpacing = static_cast<int>(8 * scale);
+    int mediumSpacing = static_cast<int>(10 * scale);
+    int titleSpace = static_cast<int>(20 * scale);
 
     // ========== FIRST ROW - Filter, Reverb, Delay ==========
     auto firstRow = area.removeFromTop(sectionHeight);
@@ -433,22 +433,22 @@ void FlarkDJEditor::resized()
     lfoSyncRateCombo.setBounds(lfoArea.removeFromTop(comboHeight));
 
     // ========== XY PAD SECTION ==========
-    area.removeFromTop(static_cast<int>(15 * scale));
-    auto xyPadSection = area.removeFromTop(static_cast<int>(220 * scale));
+    area.removeFromTop(static_cast<int>(10 * scale));
+    auto xyPadSection = area.removeFromTop(static_cast<int>(150 * scale));
     xyPadSection = xyPadSection.reduced(static_cast<int>(10 * scale), 0);
 
     // XY Pad control (square)
-    int xyPadSize = static_cast<int>(200 * scale);
+    int xyPadSize = static_cast<int>(130 * scale);
     xyPad.setBounds(xyPadSection.removeFromLeft(xyPadSize));
 
     // Parameter selection dropdowns (right of XY pad)
     xyPadSection.removeFromLeft(static_cast<int>(15 * scale));
     auto xyControlArea = xyPadSection.removeFromLeft(static_cast<int>(200 * scale));
-    xyControlArea.removeFromTop(static_cast<int>(40 * scale));
+    xyControlArea.removeFromTop(static_cast<int>(30 * scale));
 
-    xyPadXParam.setBounds(xyControlArea.removeFromTop(static_cast<int>(30 * scale)));
-    xyControlArea.removeFromTop(static_cast<int>(10 * scale));
-    xyPadYParam.setBounds(xyControlArea.removeFromTop(static_cast<int>(30 * scale)));
+    xyPadXParam.setBounds(xyControlArea.removeFromTop(static_cast<int>(25 * scale)));
+    xyControlArea.removeFromTop(static_cast<int>(8 * scale));
+    xyPadYParam.setBounds(xyControlArea.removeFromTop(static_cast<int>(25 * scale)));
 }
 
 //==============================================================================

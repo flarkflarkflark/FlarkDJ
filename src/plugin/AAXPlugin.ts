@@ -55,7 +55,7 @@ export class AAXPlugin {
   processAudio(
     inputBuffers: Float32Array[],
     outputBuffers: Float32Array[],
-    numSamples: number
+    _numSamples: number
   ): void {
     // AAX supports various channel configurations
     // Here we handle stereo (most common)

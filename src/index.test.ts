@@ -38,7 +38,7 @@ describe('FlarkDJ', () => {
 
   test('should process audio', () => {
     const input = new Float32Array(128).fill(1);
-    const filter = flark.addFilterEffect();
+    flark.addFilterEffect();
 
     const output = flark.process(input);
     expect(output).toBeDefined();
@@ -53,7 +53,7 @@ describe('FlarkDJ', () => {
     const filter = flark.addFilterEffect('filter1');
     filter.setParameter('cutoff', 1000);
 
-    const lfo = flark.lfo.createLFO('lfo1', 2);
+    flark.lfo.createLFO('lfo1', 2);
     flark.lfo.setTarget('lfo1', 'filter1', 'cutoff', 0.5);
 
     const input = new Float32Array(1024).fill(1);
@@ -65,7 +65,7 @@ describe('FlarkDJ', () => {
   test('should integrate macros with effects', () => {
     const filter = flark.addFilterEffect('filter1');
 
-    const macro = flark.macros.createMacro('macro1', 'Test Macro');
+    flark.macros.createMacro('macro1', 'Test Macro');
     flark.macros.addTarget('macro1', 'filter1', 'cutoff', 100, 10000);
     flark.macros.setMacroValue('macro1', 0.75);
 

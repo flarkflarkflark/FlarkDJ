@@ -1,5 +1,4 @@
 import { FlarkDJ } from '../index';
-import { AudioEffect } from '../types';
 
 export interface PluginParameter {
   id: number;
@@ -108,14 +107,16 @@ export class PluginWrapper {
           filter.setParameter('resonance', this.getParameter(2));
         }
         break;
-      case 1: // Filter Cutoff
+      case 1: { // Filter Cutoff
         const filter = this.flark.engine.getEffect('filter');
         if (filter) filter.setParameter('cutoff', value);
         break;
-      case 2: // Filter Resonance
+      }
+      case 2: { // Filter Resonance
         const filter2 = this.flark.engine.getEffect('filter');
         if (filter2) filter2.setParameter('resonance', value);
         break;
+      }
       case 4: // Reverb Enabled
         if (value > 0.5) {
           const reverb = this.flark.addReverbEffect('reverb');
@@ -124,10 +125,11 @@ export class PluginWrapper {
           reverb.setParameter('wetDry', this.getParameter(7));
         }
         break;
-      case 5: // Reverb Room Size
+      case 5: { // Reverb Room Size
         const reverb = this.flark.engine.getEffect('reverb');
         if (reverb) reverb.setParameter('roomSize', value);
         break;
+      }
       case 8: // Delay Enabled
         if (value > 0.5) {
           const delay = this.flark.addDelayEffect('delay');

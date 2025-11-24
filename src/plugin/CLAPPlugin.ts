@@ -124,7 +124,7 @@ export class CLAPPlugin {
   process(
     audioInputs: Float32Array[][],
     audioOutputs: Float32Array[][],
-    frameCount: number
+    _frameCount: number
   ): void {
     if (!this.isActive) return;
 
@@ -180,12 +180,12 @@ export class CLAPPlugin {
   }
 
   // Parameter modulation (CLAP feature)
-  getParameterModulation(paramId: number): number {
+  getParameterModulation(_paramId: number): number {
     // Return current modulation amount
     return 0; // Placeholder
   }
 
-  setParameterModulation(paramId: number, amount: number): void {
+  setParameterModulation(_paramId: number, _amount: number): void {
     // Apply modulation to parameter
     // This would integrate with LFO system
   }
@@ -269,7 +269,7 @@ export class CLAPPlugin {
   }
 
   // Audio ports configuration
-  getAudioPortsCount(isInput: boolean): number {
+  getAudioPortsCount(_isInput: boolean): number {
     return 1; // One stereo port
   }
 

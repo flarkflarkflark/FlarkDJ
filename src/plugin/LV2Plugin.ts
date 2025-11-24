@@ -200,7 +200,7 @@ export class LV2Plugin {
       case 'http://lv2plug.in/ns/ext/options#interface':
         return {
           get: () => ({ sampleRate: this.sampleRate }),
-          set: (options: any) => { /* Handle options */ }
+          set: (_options: any) => { /* Handle options */ }
         };
       default:
         return null;
@@ -223,7 +223,7 @@ export class LV2Plugin {
 
   // Generate detailed LV2 TTL description
   generateTTL(): string {
-    const portDescriptions = this.ports.map((port, idx) => {
+    const portDescriptions = this.ports.map((port, _idx) => {
       const portType = port.type === 'audio' ? 'lv2:AudioPort' :
                        port.type === 'control' ? 'lv2:ControlPort' : 'atom:AtomPort';
       const direction = port.direction === 'input' ? 'lv2:InputPort' : 'lv2:OutputPort';

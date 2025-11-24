@@ -22,7 +22,6 @@ export interface Preset {
   name: string;
   description?: string;
   effects: EffectState[];
-  macros?: MacroState[];
   created: Date;
   modified: Date;
 }

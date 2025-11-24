@@ -38,6 +38,15 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
+    "setupFilesAfterEnv": ["<rootDir>/jest.setup.js"],
+    "globals": {
+      "ts-jest": {
+        "tsconfig": {
+          "skipLibCheck": true,
+          "lib": ["ES2020", "DOM"]
+        }
+      }
+    },
     "collectCoverageFrom": [
       "src/**/*.ts",
       "!src/**/*.d.ts",

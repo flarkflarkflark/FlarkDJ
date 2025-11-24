@@ -21,7 +21,7 @@ export class SpectrumAnalyzer {
   }
 
   getSpectrumData(): SpectrumData {
-    this.analyser.getFloatFrequencyData(this.frequencyData);
+    this.analyser.getFloatFrequencyData(this.frequencyData as any);
 
     const nyquist = this.analyser.context.sampleRate / 2;
     const binSize = nyquist / this.analyser.frequencyBinCount;
@@ -39,12 +39,12 @@ export class SpectrumAnalyzer {
   }
 
   getWaveformData(): Float32Array {
-    this.analyser.getFloatTimeDomainData(this.timeData);
+    this.analyser.getFloatTimeDomainData(this.timeData as any);
     return this.timeData;
   }
 
   getPeakFrequency(): number {
-    this.analyser.getFloatFrequencyData(this.frequencyData);
+    this.analyser.getFloatFrequencyData(this.frequencyData as any);
 
     let maxIndex = 0;
     let maxValue = -Infinity;
@@ -62,7 +62,7 @@ export class SpectrumAnalyzer {
   }
 
   getRMS(): number {
-    this.analyser.getFloatTimeDomainData(this.timeData);
+    this.analyser.getFloatTimeDomainData(this.timeData as any);
 
     let sum = 0;
     for (let i = 0; i < this.timeData.length; i++) {

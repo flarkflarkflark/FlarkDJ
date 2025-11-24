@@ -47,11 +47,10 @@ describe('SnapshotManager', () => {
     expect(list[0].name).toBe('Renamed');
   });
 
-  test('should list snapshots sorted by timestamp', () => {
+  test('should list snapshots sorted by timestamp', async () => {
     manager.captureSnapshot('First');
-    setTimeout(() => {
-      manager.captureSnapshot('Second');
-    }, 10);
+    await new Promise(resolve => setTimeout(resolve, 10));
+    manager.captureSnapshot('Second');
 
     const list = manager.listSnapshots();
     expect(list.length).toBe(2);

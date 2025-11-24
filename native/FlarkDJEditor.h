@@ -215,6 +215,14 @@ class SpectrumAnalyzer : public juce::Component, public juce::Timer
 public:
     SpectrumAnalyzer(FlarkDJProcessor& proc) : processor(proc)
     {
+        // Initialize bar levels
+        for (int i = 0; i < numBars; ++i)
+        {
+            barLevels[i] = 0.0f;
+            barPeaks[i] = 0.0f;
+            peakHoldTime[i] = 0;
+        }
+
         startTimerHz(30); // 30 FPS refresh
     }
 
@@ -225,18 +233,45 @@ public:
 
         // Get real audio level from processor
         float level = processor.getOutputLevel();
-        level = juce::jlimit(0.0f, 1.0f, level * 3.0f); // Scale up for visibility
+        level = juce::jlimit(0.0f, 1.0f, level * 4.0f); // Scale up for visibility
 
         // Draw frequency spectrum bars
-        const int numBars = 80;
         const float barWidth = bounds.getWidth() / (float)numBars;
 
         for (int i = 0; i < numBars; ++i)
         {
-            // Use real audio level with slight variation per bar for visual interest
-            float variation = 1.0f - (std::abs(i - numBars/2) / (float)numBars) * 0.3f;
-            float target = level * variation;
-            float height = target * bounds.getHeight();
+            // Frequency weighting - bass has more energy, treble less
+            float freqBin = i / (float)numBars;
+            float freqWeight = 1.0f - (freqBin * freqBin * 0.7f); // Bass boost
+
+            // Add pseudo-random variation based on bar index to simulate frequency content
+            float phaseOffset = i * 2.5f;
+            float randomVariation = (std::sin(phaseOffset) * 0.5f + 0.5f) * 0.4f + 0.6f;
+
+            float target = level * freqWeight * randomVariation;
+
+            // Attack and decay
+            if (target > barLevels[i])
+            {
+                barLevels[i] = barLevels[i] + (target - barLevels[i]) * 0.7f; // Fast attack
+                if (barLevels[i] > barPeaks[i])
+                {
+                    barPeaks[i] = barLevels[i];
+                    peakHoldTime[i] = 15; // Hold for 15 frames (0.5 sec)
+                }
+            }
+            else
+            {
+                barLevels[i] *= 0.75f; // Slower decay
+            }
+
+            // Peak decay
+            if (peakHoldTime[i] > 0)
+                peakHoldTime[i]--;
+            else
+                barPeaks[i] *= 0.95f;
+
+            float height = barLevels[i] * bounds.getHeight();
 
             // Color gradient from orange to yellow based on intensity
             juce::Colour barColor = juce::Colour(0xffff6600).interpolatedWith(
@@ -266,7 +301,11 @@ public:
     }
 
 private:
+    static constexpr int numBars = 80;
     FlarkDJProcessor& processor;
+    float barLevels[80];
+    float barPeaks[80];
+    int peakHoldTime[80];
 };
 
 //==============================================================================

@@ -265,7 +265,8 @@ void FlarkDJProcessor::processAudio(float* leftIn, float* rightIn,
         // Apply filter with LFO modulation on cutoff
         if (filterOn)
         {
-            float cutoffMod = filterCutoff->load() * (1.0f + lfoValue * lfoDepthValue * 0.5f);
+            // LFO modulates cutoff with much wider range (up to 3x variation)
+            float cutoffMod = filterCutoff->load() * (1.0f + lfoValue * lfoDepthValue * 3.0f);
             filterLeft.setCutoff(cutoffMod);
             filterRight.setCutoff(cutoffMod);
 

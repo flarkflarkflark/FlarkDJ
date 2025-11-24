@@ -40,14 +40,19 @@ The FlarkDJ native plugin GUI has undergone a complete redesign to create a prof
   - Real-time position tracking
 
 ### 4. ✅ DJ-Style Knobs
-**Problem:** Standard circular knobs didn't match professional DJ equipment aesthetic.
+**Problem:** Standard circular knobs didn't match professional DJ equipment aesthetic and were too small.
 
 **Solution:** Created custom `DJKnobLookAndFeel` class with:
-- **8-faceted outer ring** - Black angular segments (gear-like shape)
-- **Brushed metal center** - Silver gradient with radial texture lines
-- **Orange position indicator** - Bold line with glow effect
-- **3D metallic appearance** - Highlights and shadows for depth
+- **8-faceted outer ring** - Black angular segments (gear-like shape) with per-facet lighting
+- **Brushed metal center** - Multi-layer silver gradient with 36 dense radial texture lines
+- **Outer shadow & bevel** - Drop shadow and beveled edge for elevation
+- **Realistic 3D depth** - Dual specular highlights (primary + secondary), bottom shadow on center
+- **Enhanced orange indicator** - Thicker line (4.5px) with shadow and multi-layer orange/yellow glow
+- **Larger sizes** - Filter: 75px, Effects: 65px, LFO: 80px (increased 30-50% from original)
+- **Dynamic lighting** - Facets highlight based on simulated top-left light source
 - Applied automatically to all rotary sliders
+
+**Enhancement (v2):** Knobs updated with professional metallic appearance and prominent size to match real DJ equipment.
 
 ### 5. ✅ Logo Integration
 **Problem:** Text-based "FlarkDJ" title, no custom logo used.
@@ -256,13 +261,16 @@ int sectionWidth = static_cast<int>(220 * scale);
 - `native/FlarkDJEditor.cpp` - Complete rewrite of paint() and resized()
 
 ### Total Changes
-- +500 lines of new code
+- +580 lines of new code
 - Complete visual overhaul
 - All original functionality preserved
+- Enhanced knob rendering with realistic 3D effects
 
 ## Commits
 
 ```
+f99a481 - Enhance DJ knobs: larger size and realistic 3D metallic appearance
+ffe212f - Add comprehensive GUI improvements documentation
 79f12aa - Add custom geometric FlarkDJ logo design
 e068290 - Add professional DJ-style knobs with faceted ring and brushed metal
 a714ecf - Major GUI improvements: Add resizing, spectrum analyzer, XY pad, flanger, macros

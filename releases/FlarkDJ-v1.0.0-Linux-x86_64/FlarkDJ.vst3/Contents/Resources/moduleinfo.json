@@ -1,0 +1,66 @@
+{
+  "Name": "FlarkDJ",
+  "Version": "1.0.0",
+  "Factory Info": {
+    "Vendor": "FlarkDJ Team",
+    "URL": "",
+    "E-Mail": "",
+    "Flags": {
+      "Unicode": true,
+      "Classes Discardable": false,
+      "Component Non Discardable": false,
+    },
+  },
+  "Classes": [
+    {
+      "CID": "ABCDEF019182FAEB466C726B464C446A",
+      "Category": "Audio Module Class",
+      "Name": "FlarkDJ",
+      "Vendor": "FlarkDJ Team",
+      "Version": "1.0.0",
+      "SDKVersion": "VST 3.7.8",
+      "Sub Categories": [
+        "Fx",
+        "Dynamics",
+        "Filter",
+        "Reverb",
+        "Delay",
+      ],
+      "Class Flags": 0,
+      "Cardinality": 2147483647,
+      "Snapshots": [
+      ],
+    },
+    {
+      "CID": "ABCDEF011234ABCD466C726B464C446A",
+      "Category": "Component Controller Class",
+      "Name": "FlarkDJ",
+      "Vendor": "FlarkDJ Team",
+      "Version": "1.0.0",
+      "SDKVersion": "VST 3.7.8",
+      "Sub Categories": [
+        "Fx",
+        "Dynamics",
+        "Filter",
+        "Reverb",
+        "Delay",
+      ],
+      "Class Flags": 0,
+      "Cardinality": 2147483647,
+      "Snapshots": [
+      ],
+    },
+    {
+      "CID": "ABCDEF01C0DEF00D466C726B464C446A",
+      "Category": "Plugin Compatibility Class",
+      "Name": "FlarkDJ",
+      "Vendor": "FlarkDJ Team",
+      "Version": "1.0.0",
+      "SDKVersion": "VST 3.7.8",
+      "Class Flags": 0,
+      "Cardinality": 2147483647,
+      "Snapshots": [
+      ],
+    },
+  ],
+}

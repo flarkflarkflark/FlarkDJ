@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 #include <memory>
+#include "FlarkDJDSP.h"
 
 /**
  * FlarkDJ Native Audio Processor
@@ -99,15 +100,11 @@ private:
 
     //==============================================================================
     // FlarkDJ DSP components (pure C++ implementations)
-    class FilterDSP;
-    class ReverbDSP;
-    class DelayDSP;
-    class LFODSP;
-
-    std::unique_ptr<FilterDSP> filter;
-    std::unique_ptr<ReverbDSP> reverb;
-    std::unique_ptr<DelayDSP> delay;
-    std::unique_ptr<LFODSP> lfo;
+    // Stereo processing - one instance per channel
+    FlarkFilter filterLeft, filterRight;
+    FlarkReverb reverbLeft, reverbRight;
+    FlarkDelay delayLeft, delayRight;
+    FlarkLFO lfo;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FlarkDJProcessor)

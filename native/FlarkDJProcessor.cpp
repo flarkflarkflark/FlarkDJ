@@ -89,11 +89,18 @@ void FlarkDJProcessor::releaseResources()
 void FlarkDJProcessor::initializeFlarkDJ()
 {
     // Initialize DSP components with current sample rate
-    // This would initialize the FlarkDJ audio engine
-    // In production, this would either:
-    // 1. Instantiate C++ implementations of the effects
-    // 2. Use Node.js N-API to call JavaScript implementations
-    // 3. Use WebAssembly compiled from TypeScript
+    float sr = static_cast<float>(currentSampleRate);
+
+    filterLeft.setSampleRate(sr);
+    filterRight.setSampleRate(sr);
+
+    reverbLeft.setSampleRate(sr);
+    reverbRight.setSampleRate(sr);
+
+    delayLeft.setSampleRate(sr);
+    delayRight.setSampleRate(sr);
+
+    lfo.setSampleRate(sr);
 }
 
 bool FlarkDJProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
@@ -150,21 +157,90 @@ void FlarkDJProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Midi
 void FlarkDJProcessor::processAudio(float* leftIn, float* rightIn,
                                    float* leftOut, float* rightOut, int numSamples)
 {
-    // This is where the FlarkDJ audio processing happens
-    // In a production build, you would:
-    // 1. Call C++ implementations of the effects
-    // 2. Or use N-API to call JavaScript implementations
-    // 3. Or use WebAssembly compiled from TypeScript
+    // Update effect parameters from UI
+    bool filterOn = filterEnabled->load() > 0.5f;
+    bool reverbOn = reverbEnabled->load() > 0.5f;
+    bool delayOn = delayEnabled->load() > 0.5f;
 
-    // For now, copy input to output (passthrough)
-    std::copy(leftIn, leftIn + numSamples, leftOut);
-    std::copy(rightIn, rightIn + numSamples, rightOut);
+    // Update filter parameters
+    if (filterOn)
+    {
+        filterLeft.setCutoff(filterCutoff->load());
+        filterRight.setCutoff(filterCutoff->load());
+        filterLeft.setResonance(filterResonance->load());
+        filterRight.setResonance(filterResonance->load());
 
-    // TODO: Implement actual FlarkDJ processing pipeline:
-    // - Filter processing
-    // - Reverb processing
-    // - Delay processing
-    // - LFO modulation
+        int filterTypeInt = static_cast<int>(filterType->load());
+        filterLeft.setType(static_cast<FlarkFilter::FilterType>(filterTypeInt));
+        filterRight.setType(static_cast<FlarkFilter::FilterType>(filterTypeInt));
+    }
+
+    // Update reverb parameters
+    if (reverbOn)
+    {
+        reverbLeft.setRoomSize(reverbRoomSize->load());
+        reverbRight.setRoomSize(reverbRoomSize->load());
+        reverbLeft.setDamping(reverbDamping->load());
+        reverbRight.setDamping(reverbDamping->load());
+        reverbLeft.setWetDryMix(reverbWetDry->load());
+        reverbRight.setWetDryMix(reverbWetDry->load());
+    }
+
+    // Update delay parameters
+    if (delayOn)
+    {
+        delayLeft.setDelayTime(delayTime->load());
+        delayRight.setDelayTime(delayTime->load());
+        delayLeft.setFeedback(delayFeedback->load());
+        delayRight.setFeedback(delayFeedback->load());
+        delayLeft.setWetDryMix(delayWetDry->load());
+        delayRight.setWetDryMix(delayWetDry->load());
+    }
+
+    // Update LFO parameters
+    lfo.setRate(lfoRate->load());
+    int lfoWaveformInt = static_cast<int>(lfoWaveform->load());
+    lfo.setWaveform(static_cast<FlarkLFO::Waveform>(lfoWaveformInt));
+
+    // Process each sample
+    for (int i = 0; i < numSamples; ++i)
+    {
+        float leftSample = leftIn[i];
+        float rightSample = rightIn[i];
+
+        // Get LFO value for modulation
+        float lfoValue = lfo.process();
+        float lfoDepthValue = lfoDepth->load();
+
+        // Apply filter with LFO modulation on cutoff
+        if (filterOn)
+        {
+            float cutoffMod = filterCutoff->load() * (1.0f + lfoValue * lfoDepthValue * 0.5f);
+            filterLeft.setCutoff(cutoffMod);
+            filterRight.setCutoff(cutoffMod);
+
+            leftSample = filterLeft.process(leftSample);
+            rightSample = filterRight.process(rightSample);
+        }
+
+        // Apply reverb
+        if (reverbOn)
+        {
+            leftSample = reverbLeft.process(leftSample);
+            rightSample = reverbRight.process(rightSample);
+        }
+
+        // Apply delay
+        if (delayOn)
+        {
+            leftSample = delayLeft.process(leftSample);
+            rightSample = delayRight.process(rightSample);
+        }
+
+        // Write to output
+        leftOut[i] = leftSample;
+        rightOut[i] = rightSample;
+    }
 }
 
 //==============================================================================

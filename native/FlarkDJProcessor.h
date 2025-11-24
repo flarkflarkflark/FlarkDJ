@@ -60,6 +60,9 @@ public:
     // Parameter management
     juce::AudioProcessorValueTreeState& getParameters() { return parameters; }
 
+    // Get current output RMS level for spectrum display (0.0 to 1.0)
+    float getOutputLevel() const { return outputLevel.load(); }
+
 private:
     //==============================================================================
     // FlarkDJ engine interface
@@ -86,6 +89,15 @@ private:
     std::atomic<float>* delayFeedback = nullptr;
     std::atomic<float>* delayWetDry = nullptr;
 
+    std::atomic<float>* flangerEnabled = nullptr;
+    std::atomic<float>* flangerRate = nullptr;
+    std::atomic<float>* flangerDepth = nullptr;
+    std::atomic<float>* flangerFeedback = nullptr;
+    std::atomic<float>* flangerWetDry = nullptr;
+
+    std::atomic<float>* sidechainEnabled = nullptr;
+    std::atomic<float>* sidechainThreshold = nullptr;
+
     std::atomic<float>* lfoRate = nullptr;
     std::atomic<float>* lfoDepth = nullptr;
     std::atomic<float>* lfoWaveform = nullptr;
@@ -97,6 +109,7 @@ private:
     // Audio processing state
     double currentSampleRate = 44100.0;
     int currentBlockSize = 512;
+    std::atomic<float> outputLevel{0.0f};
 
     //==============================================================================
     // FlarkDJ DSP components (pure C++ implementations)
@@ -104,6 +117,7 @@ private:
     FlarkFilter filterLeft, filterRight;
     FlarkReverb reverbLeft, reverbRight;
     FlarkDelay delayLeft, delayRight;
+    FlarkFlanger flangerLeft, flangerRight;
     FlarkLFO lfo;
 
     //==============================================================================

@@ -4,11 +4,6 @@
 FlarkDJEditor::FlarkDJEditor(FlarkDJProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p)
 {
-    // Enable resizing with constraints
-    setResizable(true, true);
-    setResizeLimits(900, 700, 1600, 1200);
-    setSize(1200, 800);
-
     auto& params = audioProcessor.getParameters();
 
     // Create spectrum analyzer
@@ -101,17 +96,17 @@ FlarkDJEditor::FlarkDJEditor(FlarkDJProcessor& p)
 
     addAndMakeVisible(flangerRateSlider);
     setupSlider(flangerRateSlider);
-    flangerRateAttachment.reset(new SliderAttachment(params, "lfoRate", flangerRateSlider)); // Reuse LFO rate
+    flangerRateAttachment.reset(new SliderAttachment(params, "flangerRate", flangerRateSlider));
     createLabel("Rate", flangerRateSlider);
 
     addAndMakeVisible(flangerDepthSlider);
     setupSlider(flangerDepthSlider);
-    flangerDepthAttachment.reset(new SliderAttachment(params, "lfoDepth", flangerDepthSlider)); // Reuse LFO depth
+    flangerDepthAttachment.reset(new SliderAttachment(params, "flangerDepth", flangerDepthSlider));
     createLabel("Depth", flangerDepthSlider);
 
     addAndMakeVisible(flangerFeedbackSlider);
     setupSlider(flangerFeedbackSlider);
-    flangerFeedbackAttachment.reset(new SliderAttachment(params, "delayFeedback", flangerFeedbackSlider)); // Reuse delay feedback
+    flangerFeedbackAttachment.reset(new SliderAttachment(params, "flangerFeedback", flangerFeedbackSlider));
     createLabel("Feedback", flangerFeedbackSlider);
 
     // ========== LFO SECTION ==========
@@ -157,6 +152,11 @@ FlarkDJEditor::FlarkDJEditor(FlarkDJProcessor& p)
     setupButton(masterBypassButton);
     masterBypassButton.setButtonText("Bypass");
     masterBypassAttachment.reset(new ButtonAttachment(params, "masterBypass", masterBypassButton));
+
+    // Enable resizing with constraints (AFTER all components are initialized)
+    setResizable(true, true);
+    setResizeLimits(900, 700, 1600, 1200);
+    setSize(1200, 800);
 }
 
 FlarkDJEditor::~FlarkDJEditor()
@@ -186,83 +186,30 @@ void FlarkDJEditor::paint(juce::Graphics& g)
     g.setGradientFill(logoGradient);
     g.fillRect(logoArea);
 
-    // Draw custom geometric "FlarkDJ" logo
-    auto titleBounds = logoArea.reduced(10);
+    // Draw FlarkDJ logo - clean bold text style
     juce::Colour orangeGlow(0xffff6600);
+    auto titleBounds = logoArea.reduced(10);
 
-    // Center the logo
-    float logoWidth = 280.0f;
-    float logoHeight = 50.0f;
-    float logoX = titleBounds.getCentreX() - logoWidth / 2;
-    float logoY = titleBounds.getCentreY() - logoHeight / 2 - 8;
+    // Main logo text with glow effect
+    juce::Font logoFont(48.0f, juce::Font::bold);
+    g.setFont(logoFont);
 
-    // Draw stylized geometric "FlarkDJ" with angular shapes
-    g.setColour(orangeGlow);
-
-    // Each letter is drawn with geometric shapes to match the uploaded logo style
-    juce::Path logoPath;
-
-    // Simplified geometric font style
-    float letterSpacing = logoWidth / 7.0f;
-    float x = logoX;
-    float h = logoHeight;
-
-    // F
-    logoPath.addRectangle(x, logoY, 8, h);
-    logoPath.addRectangle(x, logoY, letterSpacing * 0.6f, 8);
-    logoPath.addRectangle(x, logoY + h * 0.4f, letterSpacing * 0.5f, 8);
-    x += letterSpacing;
-
-    // l
-    logoPath.addRectangle(x, logoY, 8, h);
-    logoPath.addRectangle(x, logoY + h - 8, letterSpacing * 0.4f, 8);
-    x += letterSpacing;
-
-    // a
-    logoPath.addRectangle(x, logoY + h * 0.3f, letterSpacing * 0.6f, 8);
-    logoPath.addRectangle(x, logoY + h * 0.3f, 8, h * 0.7f);
-    logoPath.addRectangle(x + letterSpacing * 0.5f, logoY + h * 0.3f, 8, h * 0.7f);
-    logoPath.addRectangle(x, logoY + h - 8, letterSpacing * 0.6f, 8);
-    x += letterSpacing;
-
-    // r
-    logoPath.addRectangle(x, logoY + h * 0.3f, 8, h * 0.7f);
-    logoPath.addRectangle(x, logoY + h * 0.3f, letterSpacing * 0.5f, 8);
-    x += letterSpacing;
-
-    // k
-    logoPath.addRectangle(x, logoY, 8, h);
-    logoPath.addRectangle(x + letterSpacing * 0.5f, logoY + h * 0.3f, 8, h * 0.3f);
-    logoPath.addRectangle(x + letterSpacing * 0.5f, logoY + h * 0.65f, 8, h * 0.35f);
-    x += letterSpacing;
-
-    // D
-    logoPath.addRectangle(x, logoY, 8, h);
-    logoPath.addRectangle(x, logoY, letterSpacing * 0.5f, 8);
-    logoPath.addRectangle(x, logoY + h - 8, letterSpacing * 0.5f, 8);
-    logoPath.addRectangle(x + letterSpacing * 0.5f, logoY + 8, 8, h - 16);
-    x += letterSpacing;
-
-    // J
-    logoPath.addRectangle(x, logoY + h * 0.5f, letterSpacing * 0.5f, 8);
-    logoPath.addRectangle(x + letterSpacing * 0.4f, logoY + h * 0.5f, 8, h * 0.5f);
-    logoPath.addRectangle(x, logoY + h - 8, letterSpacing * 0.5f, 8);
-
-    // Draw logo with glow
-    for (int i = 2; i > 0; --i)
+    // Draw glow layers
+    for (int i = 3; i > 0; --i)
     {
-        g.setColour(orangeGlow.withAlpha(0.2f * i));
-        g.fillPath(logoPath, juce::AffineTransform::scale(1.0f + i * 0.02f, 1.0f + i * 0.02f)
-                                              .translated(-logoWidth * i * 0.01f, -logoHeight * i * 0.01f));
+        g.setColour(orangeGlow.withAlpha(0.15f * i));
+        g.drawText("FlarkDJ", titleBounds.expanded(i * 2), juce::Justification::centred);
     }
 
+    // Draw main text
     g.setColour(orangeGlow);
-    g.fillPath(logoPath);
+    g.drawText("FlarkDJ", titleBounds, juce::Justification::centred);
 
     // Subtitle
-    g.setColour(orangeGlow.withAlpha(0.8f));
+    g.setColour(orangeGlow.withAlpha(0.7f));
     g.setFont(juce::Font(11.0f));
-    g.drawText("Professional DJ Toolkit", logoX, logoY + h + 5, logoWidth, 15, juce::Justification::centred);
+    g.drawText("DJ Effects Plugin", titleBounds.getX(), titleBounds.getBottom() - 18,
+               titleBounds.getWidth(), 15, juce::Justification::centred);
 
     // Orange accent line with glow
     g.setColour(orangeGlow.withAlpha(0.3f));
@@ -351,11 +298,11 @@ void FlarkDJEditor::resized()
     auto filterArea = topRow.removeFromLeft(sectionWidth).reduced(15, 15);
     filterArea.removeFromTop(25); // Title space
     filterEnabledButton.setBounds(filterArea.removeFromTop(25));
-    filterArea.removeFromTop(18);
-    filterCutoffSlider.setBounds(filterArea.removeFromTop(65));
-    filterArea.removeFromTop(18);
-    filterResonanceSlider.setBounds(filterArea.removeFromTop(65));
-    filterArea.removeFromTop(10);
+    filterArea.removeFromTop(12);
+    filterCutoffSlider.setBounds(filterArea.removeFromTop(75));
+    filterArea.removeFromTop(12);
+    filterResonanceSlider.setBounds(filterArea.removeFromTop(75));
+    filterArea.removeFromTop(8);
     filterTypeCombo.setBounds(filterArea.removeFromTop(22));
     topRow.removeFromLeft(spacing);
 
@@ -363,46 +310,46 @@ void FlarkDJEditor::resized()
     auto reverbArea = topRow.removeFromLeft(sectionWidth).reduced(15, 15);
     reverbArea.removeFromTop(25);
     reverbEnabledButton.setBounds(reverbArea.removeFromTop(25));
-    reverbArea.removeFromTop(18);
-    reverbRoomSizeSlider.setBounds(reverbArea.removeFromTop(50));
-    reverbArea.removeFromTop(18);
-    reverbDampingSlider.setBounds(reverbArea.removeFromTop(50));
-    reverbArea.removeFromTop(18);
-    reverbWetDrySlider.setBounds(reverbArea.removeFromTop(50));
+    reverbArea.removeFromTop(12);
+    reverbRoomSizeSlider.setBounds(reverbArea.removeFromTop(65));
+    reverbArea.removeFromTop(12);
+    reverbDampingSlider.setBounds(reverbArea.removeFromTop(65));
+    reverbArea.removeFromTop(12);
+    reverbWetDrySlider.setBounds(reverbArea.removeFromTop(65));
     topRow.removeFromLeft(spacing);
 
     // Delay section
     auto delayArea = topRow.removeFromLeft(sectionWidth).reduced(15, 15);
     delayArea.removeFromTop(25);
     delayEnabledButton.setBounds(delayArea.removeFromTop(25));
-    delayArea.removeFromTop(18);
-    delayTimeSlider.setBounds(delayArea.removeFromTop(50));
-    delayArea.removeFromTop(18);
-    delayFeedbackSlider.setBounds(delayArea.removeFromTop(50));
-    delayArea.removeFromTop(18);
-    delayWetDrySlider.setBounds(delayArea.removeFromTop(50));
+    delayArea.removeFromTop(12);
+    delayTimeSlider.setBounds(delayArea.removeFromTop(65));
+    delayArea.removeFromTop(12);
+    delayFeedbackSlider.setBounds(delayArea.removeFromTop(65));
+    delayArea.removeFromTop(12);
+    delayWetDrySlider.setBounds(delayArea.removeFromTop(65));
     topRow.removeFromLeft(spacing);
 
     // Flanger section
     auto flangerArea = topRow.removeFromLeft(sectionWidth).reduced(15, 15);
     flangerArea.removeFromTop(25);
     flangerEnabledButton.setBounds(flangerArea.removeFromTop(25));
-    flangerArea.removeFromTop(18);
-    flangerRateSlider.setBounds(flangerArea.removeFromTop(50));
-    flangerArea.removeFromTop(18);
-    flangerDepthSlider.setBounds(flangerArea.removeFromTop(50));
-    flangerArea.removeFromTop(18);
-    flangerFeedbackSlider.setBounds(flangerArea.removeFromTop(50));
+    flangerArea.removeFromTop(12);
+    flangerRateSlider.setBounds(flangerArea.removeFromTop(65));
+    flangerArea.removeFromTop(12);
+    flangerDepthSlider.setBounds(flangerArea.removeFromTop(65));
+    flangerArea.removeFromTop(12);
+    flangerFeedbackSlider.setBounds(flangerArea.removeFromTop(65));
     topRow.removeFromLeft(spacing);
 
     // LFO section
     auto lfoArea = topRow.removeFromLeft(sectionWidth).reduced(15, 15);
     lfoArea.removeFromTop(25);
     lfoArea.removeFromTop(5);
-    lfoRateSlider.setBounds(lfoArea.removeFromTop(70));
-    lfoArea.removeFromTop(18);
-    lfoDepthSlider.setBounds(lfoArea.removeFromTop(70));
-    lfoArea.removeFromTop(10);
+    lfoRateSlider.setBounds(lfoArea.removeFromTop(80));
+    lfoArea.removeFromTop(12);
+    lfoDepthSlider.setBounds(lfoArea.removeFromTop(80));
+    lfoArea.removeFromTop(8);
     lfoWaveformCombo.setBounds(lfoArea.removeFromTop(22));
 
     area.removeFromTop(spacing);

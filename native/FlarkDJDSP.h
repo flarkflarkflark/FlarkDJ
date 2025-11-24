@@ -379,3 +379,96 @@ private:
     float damping = 0.5f;
     float wetDry = 0.3f;
 };
+
+//==============================================================================
+// Flanger Effect
+//==============================================================================
+class FlarkFlanger
+{
+public:
+    FlarkFlanger()
+    {
+        buffer.resize(4410, 0.0f); // 100ms at 44.1kHz
+    }
+
+    void setSampleRate(float sr)
+    {
+        sampleRate = sr;
+        int maxDelay = static_cast<int>(sampleRate * 0.01f); // 10ms max delay
+        buffer.resize(maxDelay * 2, 0.0f);
+        lfoPhase = 0.0f;
+    }
+
+    void setRate(float rateHz)
+    {
+        rate = juce::jlimit(0.1f, 10.0f, rateHz);
+    }
+
+    void setDepth(float depthAmount)
+    {
+        depth = juce::jlimit(0.0f, 1.0f, depthAmount);
+    }
+
+    void setFeedback(float fb)
+    {
+        feedback = juce::jlimit(0.0f, 0.95f, fb);
+    }
+
+    void setWetDryMix(float mix)
+    {
+        wetDry = juce::jlimit(0.0f, 1.0f, mix);
+    }
+
+    float process(float input)
+    {
+        // Update LFO
+        lfoPhase += rate / sampleRate;
+        if (lfoPhase >= 1.0f)
+            lfoPhase -= 1.0f;
+
+        // Calculate LFO value (sine wave)
+        float lfoValue = std::sin(lfoPhase * 2.0f * juce::MathConstants<float>::pi);
+
+        // Calculate delay time (1-10ms modulated by LFO)
+        float minDelay = 1.0f;  // 1ms
+        float maxDelay = 10.0f; // 10ms
+        float delayMs = minDelay + (maxDelay - minDelay) * depth * (lfoValue * 0.5f + 0.5f);
+        float delaySamples = (delayMs / 1000.0f) * sampleRate;
+
+        // Read from delay buffer with interpolation
+        int readPos1 = static_cast<int>(writePos - delaySamples);
+        while (readPos1 < 0) readPos1 += buffer.size();
+        readPos1 %= buffer.size();
+
+        int readPos2 = (readPos1 + 1) % buffer.size();
+        float frac = delaySamples - std::floor(delaySamples);
+
+        float delayed = buffer[readPos1] * (1.0f - frac) + buffer[readPos2] * frac;
+
+        // Write to buffer with feedback
+        buffer[writePos] = input + delayed * feedback;
+
+        // Advance write position
+        writePos = (writePos + 1) % buffer.size();
+
+        // Mix wet/dry
+        return input * (1.0f - wetDry) + delayed * wetDry;
+    }
+
+    void reset()
+    {
+        std::fill(buffer.begin(), buffer.end(), 0.0f);
+        writePos = 0;
+        lfoPhase = 0.0f;
+    }
+
+private:
+    std::vector<float> buffer;
+    int writePos = 0;
+    float sampleRate = 44100.0f;
+    float rate = 0.5f;      // LFO rate in Hz
+    float depth = 0.5f;     // Modulation depth
+    float feedback = 0.5f;  // Feedback amount
+    float wetDry = 0.5f;    // Wet/dry mix
+    float lfoPhase = 0.0f;  // LFO phase
+};

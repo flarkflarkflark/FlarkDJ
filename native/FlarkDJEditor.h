@@ -255,6 +255,11 @@ private:
     juce::Slider flangerDepthSlider;
     juce::Slider flangerFeedbackSlider;
 
+    // Isolator controls
+    juce::ToggleButton isolatorEnabledButton;
+    juce::Slider isolatorPositionSlider;
+    juce::Slider isolatorQSlider;
+
     // LFO controls
     juce::Slider lfoRateSlider;
     juce::Slider lfoDepthSlider;
@@ -292,6 +297,10 @@ private:
     std::unique_ptr<SliderAttachment> flangerRateAttachment;
     std::unique_ptr<SliderAttachment> flangerDepthAttachment;
     std::unique_ptr<SliderAttachment> flangerFeedbackAttachment;
+
+    std::unique_ptr<ButtonAttachment> isolatorEnabledAttachment;
+    std::unique_ptr<SliderAttachment> isolatorPositionAttachment;
+    std::unique_ptr<SliderAttachment> isolatorQAttachment;
 
     std::unique_ptr<SliderAttachment> lfoRateAttachment;
     std::unique_ptr<SliderAttachment> lfoDepthAttachment;

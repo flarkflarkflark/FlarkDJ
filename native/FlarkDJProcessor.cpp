@@ -53,6 +53,12 @@ FlarkDJProcessor::FlarkDJProcessor()
                     std::make_unique<juce::AudioParameterChoice>("lfoWaveform", "LFO Waveform",
                         juce::StringArray{"Sine", "Square", "Triangle", "Sawtooth"}, 0),
 
+                    std::make_unique<juce::AudioParameterBool>("isolatorEnabled", "Isolator Enabled", false),
+                    std::make_unique<juce::AudioParameterFloat>("isolatorPosition", "Isolator Position",
+                        -1.0f, 1.0f, 0.0f),
+                    std::make_unique<juce::AudioParameterFloat>("isolatorQ", "Isolator Q",
+                        0.5f, 10.0f, 2.0f),
+
                     std::make_unique<juce::AudioParameterFloat>("masterMix", "Master Mix",
                         0.0f, 1.0f, 1.0f),
                     std::make_unique<juce::AudioParameterBool>("masterBypass", "Master Bypass", false)
@@ -86,6 +92,10 @@ FlarkDJProcessor::FlarkDJProcessor()
     lfoRate = parameters.getRawParameterValue("lfoRate");
     lfoDepth = parameters.getRawParameterValue("lfoDepth");
     lfoWaveform = parameters.getRawParameterValue("lfoWaveform");
+
+    isolatorEnabled = parameters.getRawParameterValue("isolatorEnabled");
+    isolatorPosition = parameters.getRawParameterValue("isolatorPosition");
+    isolatorQ = parameters.getRawParameterValue("isolatorQ");
 
     masterMix = parameters.getRawParameterValue("masterMix");
     masterBypass = parameters.getRawParameterValue("masterBypass");
@@ -125,6 +135,9 @@ void FlarkDJProcessor::initializeFlarkDJ()
 
     flangerLeft.setSampleRate(sr);
     flangerRight.setSampleRate(sr);
+
+    isolatorLeft.setSampleRate(sr);
+    isolatorRight.setSampleRate(sr);
 
     lfo.setSampleRate(sr);
 }
@@ -198,6 +211,7 @@ void FlarkDJProcessor::processAudio(float* leftIn, float* rightIn,
     bool reverbOn = reverbEnabled->load() > 0.5f;
     bool delayOn = delayEnabled->load() > 0.5f;
     bool flangerOn = flangerEnabled->load() > 0.5f;
+    bool isolatorOn = isolatorEnabled->load() > 0.5f;
 
     // Update filter parameters
     if (filterOn)
@@ -208,8 +222,8 @@ void FlarkDJProcessor::processAudio(float* leftIn, float* rightIn,
         filterRight.setResonance(filterResonance->load());
 
         int filterTypeInt = static_cast<int>(filterType->load());
-        filterLeft.setType(static_cast<FlarkFilter::FilterType>(filterTypeInt));
-        filterRight.setType(static_cast<FlarkFilter::FilterType>(filterTypeInt));
+        filterLeft.setType(static_cast<FlarkButterworthFilter::FilterType>(filterTypeInt));
+        filterRight.setType(static_cast<FlarkButterworthFilter::FilterType>(filterTypeInt));
     }
 
     // Update reverb parameters
@@ -245,6 +259,15 @@ void FlarkDJProcessor::processAudio(float* leftIn, float* rightIn,
         flangerRight.setFeedback(flangerFeedback->load());
         flangerLeft.setWetDryMix(flangerWetDry->load());
         flangerRight.setWetDryMix(flangerWetDry->load());
+    }
+
+    // Update isolator parameters
+    if (isolatorOn)
+    {
+        isolatorLeft.setPosition(isolatorPosition->load());
+        isolatorRight.setPosition(isolatorPosition->load());
+        isolatorLeft.setQ(isolatorQ->load());
+        isolatorRight.setQ(isolatorQ->load());
     }
 
     // Update LFO parameters
@@ -293,6 +316,13 @@ void FlarkDJProcessor::processAudio(float* leftIn, float* rightIn,
         {
             leftSample = flangerLeft.process(leftSample);
             rightSample = flangerRight.process(rightSample);
+        }
+
+        // Apply isolator (DJ-style filter sweep)
+        if (isolatorOn)
+        {
+            leftSample = isolatorLeft.process(leftSample);
+            rightSample = isolatorRight.process(rightSample);
         }
 
         // Write to output

@@ -472,3 +472,225 @@ private:
     float wetDry = 0.5f;    // Wet/dry mix
     float lfoPhase = 0.0f;  // LFO phase
 };
+
+//==============================================================================
+// Butterworth Filter (Cascaded Biquads for Steep Rolloff)
+// Based on Airwindows Isolator technique - 3 stages = ~18 dB/octave
+//==============================================================================
+class FlarkButterworthFilter
+{
+public:
+    enum FilterType
+    {
+        Lowpass = 0,
+        Highpass = 1,
+        Bandpass = 2
+    };
+
+    FlarkButterworthFilter() : sampleRate(44100.0f)
+    {
+        reset();
+    }
+
+    void setSampleRate(float sr)
+    {
+        sampleRate = sr;
+        updateCoefficients();
+    }
+
+    void setType(FilterType type)
+    {
+        filterType = type;
+        updateCoefficients();
+    }
+
+    void setCutoff(float cutoffHz)
+    {
+        cutoff = juce::jlimit(20.0f, 20000.0f, cutoffHz);
+        updateCoefficients();
+    }
+
+    void setResonance(float q)
+    {
+        // Q for Butterworth stages (golden ratio approximation for smooth response)
+        resonance = juce::jlimit(0.1f, 10.0f, q);
+        updateCoefficients();
+    }
+
+    float process(float input)
+    {
+        // Process through 3 cascaded biquad stages for steep rolloff
+        float output = input;
+
+        // Stage 1
+        output = b0_1 * output + b1_1 * x1_1 + b2_1 * x2_1 - a1_1 * y1_1 - a2_1 * y2_1;
+        x2_1 = x1_1; x1_1 = input;
+        y2_1 = y1_1; y1_1 = output;
+
+        // Stage 2
+        float input2 = output;
+        output = b0_2 * output + b1_2 * x1_2 + b2_2 * x2_2 - a1_2 * y1_2 - a2_2 * y2_2;
+        x2_2 = x1_2; x1_2 = input2;
+        y2_2 = y1_2; y1_2 = output;
+
+        // Stage 3
+        float input3 = output;
+        output = b0_3 * output + b1_3 * x1_3 + b2_3 * x2_3 - a1_3 * y1_3 - a2_3 * y2_3;
+        x2_3 = x1_3; x1_3 = input3;
+        y2_3 = y1_3; y1_3 = output;
+
+        return output;
+    }
+
+    void reset()
+    {
+        x1_1 = x2_1 = y1_1 = y2_1 = 0.0f;
+        x1_2 = x2_2 = y1_2 = y2_2 = 0.0f;
+        x1_3 = x2_3 = y1_3 = y2_3 = 0.0f;
+    }
+
+private:
+    void updateCoefficients()
+    {
+        // Butterworth biquad coefficients using bilinear transform
+        float freq = cutoff / sampleRate;
+        freq = juce::jlimit(0.0001f, 0.499f, freq);
+
+        float K = std::tan(juce::MathConstants<float>::pi * freq);
+        float Q = resonance;
+        float norm = 1.0f / (1.0f + K / Q + K * K);
+
+        switch (filterType)
+        {
+            case Lowpass:
+                // All 3 stages use same coefficients for Butterworth response
+                b0_1 = b0_2 = b0_3 = K * K * norm;
+                b1_1 = b1_2 = b1_3 = 2.0f * b0_1;
+                b2_1 = b2_2 = b2_3 = b0_1;
+                a1_1 = a1_2 = a1_3 = 2.0f * (K * K - 1.0f) * norm;
+                a2_1 = a2_2 = a2_3 = (1.0f - K / Q + K * K) * norm;
+                break;
+
+            case Highpass:
+                b0_1 = b0_2 = b0_3 = 1.0f * norm;
+                b1_1 = b1_2 = b1_3 = -2.0f * norm;
+                b2_1 = b2_2 = b2_3 = 1.0f * norm;
+                a1_1 = a1_2 = a1_3 = 2.0f * (K * K - 1.0f) * norm;
+                a2_1 = a2_2 = a2_3 = (1.0f - K / Q + K * K) * norm;
+                break;
+
+            case Bandpass:
+                b0_1 = b0_2 = b0_3 = K / Q * norm;
+                b1_1 = b1_2 = b1_3 = 0.0f;
+                b2_1 = b2_2 = b2_3 = -(K / Q) * norm;
+                a1_1 = a1_2 = a1_3 = 2.0f * (K * K - 1.0f) * norm;
+                a2_1 = a2_2 = a2_3 = (1.0f - K / Q + K * K) * norm;
+                break;
+        }
+    }
+
+    float sampleRate;
+    float cutoff = 400.0f;
+    float resonance = 3.0f;
+    FilterType filterType = Lowpass;
+
+    // Biquad coefficients for 3 stages
+    float b0_1, b1_1, b2_1, a1_1, a2_1;
+    float b0_2, b1_2, b2_2, a1_2, a2_2;
+    float b0_3, b1_3, b2_3, a1_3, a2_3;
+
+    // State variables for 3 stages
+    float x1_1 = 0.0f, x2_1 = 0.0f, y1_1 = 0.0f, y2_1 = 0.0f;
+    float x1_2 = 0.0f, x2_2 = 0.0f, y1_2 = 0.0f, y2_2 = 0.0f;
+    float x1_3 = 0.0f, x2_3 = 0.0f, y1_3 = 0.0f, y2_3 = 0.0f;
+};
+
+//==============================================================================
+// DJ Isolator (Airwindows Isolator3-inspired)
+// Single slider: left=lowpass, center=fullrange, right=highpass
+//==============================================================================
+class FlarkIsolator
+{
+public:
+    FlarkIsolator() : sampleRate(44100.0f)
+    {
+        reset();
+    }
+
+    void setSampleRate(float sr)
+    {
+        sampleRate = sr;
+        lowpassFilter.setSampleRate(sr);
+        highpassFilter.setSampleRate(sr);
+    }
+
+    // Position: -1.0 (full lowpass) to +1.0 (full highpass), 0.0 = fullrange
+    void setPosition(float pos)
+    {
+        position = juce::jlimit(-1.0f, 1.0f, pos);
+        updateFilters();
+    }
+
+    // Q/bandwidth control: higher = narrower band (more resonant)
+    void setQ(float q)
+    {
+        qValue = juce::jlimit(0.5f, 10.0f, q);
+        updateFilters();
+    }
+
+    float process(float input)
+    {
+        if (std::abs(position) < 0.01f)
+            return input; // Fullrange bypass
+
+        float output;
+
+        if (position < 0.0f)
+        {
+            // Lowpass mode (sweep left)
+            output = lowpassFilter.process(input);
+            // Blend with dry based on position
+            float blend = std::abs(position);
+            output = input * (1.0f - blend) + output * blend;
+        }
+        else
+        {
+            // Highpass mode (sweep right)
+            output = highpassFilter.process(input);
+            // Blend with dry based on position
+            float blend = std::abs(position);
+            output = input * (1.0f - blend) + output * blend;
+        }
+
+        return output;
+    }
+
+    void reset()
+    {
+        lowpassFilter.reset();
+        highpassFilter.reset();
+    }
+
+private:
+    void updateFilters()
+    {
+        // Map position to frequency (logarithmic)
+        // Center (0) = 1kHz, full left = 100Hz, full right = 10kHz
+        float freq = 1000.0f * std::pow(10.0f, position); // 100Hz to 10kHz range
+
+        lowpassFilter.setType(FlarkButterworthFilter::Lowpass);
+        lowpassFilter.setCutoff(freq);
+        lowpassFilter.setResonance(qValue);
+
+        highpassFilter.setType(FlarkButterworthFilter::Highpass);
+        highpassFilter.setCutoff(freq);
+        highpassFilter.setResonance(qValue);
+    }
+
+    float sampleRate;
+    float position = 0.0f;  // -1 to +1
+    float qValue = 2.0f;
+
+    FlarkButterworthFilter lowpassFilter;
+    FlarkButterworthFilter highpassFilter;
+};

@@ -90,6 +90,22 @@ FlarkDJEditor::FlarkDJEditor(FlarkDJProcessor& p)
     flangerFeedbackAttachment.reset(new SliderAttachment(params, "flangerFeedback", flangerFeedbackSlider));
     createLabel("Feedback", flangerFeedbackSlider);
 
+    // ========== ISOLATOR SECTION ==========
+    addAndMakeVisible(isolatorEnabledButton);
+    setupButton(isolatorEnabledButton);
+    isolatorEnabledButton.setButtonText("Isolator");
+    isolatorEnabledAttachment.reset(new ButtonAttachment(params, "isolatorEnabled", isolatorEnabledButton));
+
+    addAndMakeVisible(isolatorPositionSlider);
+    setupSlider(isolatorPositionSlider, juce::Slider::LinearHorizontal); // Horizontal slider for position
+    isolatorPositionAttachment.reset(new SliderAttachment(params, "isolatorPosition", isolatorPositionSlider));
+    createLabel("Position (L=Low, R=High)", isolatorPositionSlider);
+
+    addAndMakeVisible(isolatorQSlider);
+    setupSlider(isolatorQSlider);
+    isolatorQAttachment.reset(new SliderAttachment(params, "isolatorQ", isolatorQSlider));
+    createLabel("Q / Bandwidth", isolatorQSlider);
+
     // ========== LFO SECTION ==========
     addAndMakeVisible(lfoRateSlider);
     setupSlider(lfoRateSlider);
@@ -190,8 +206,8 @@ void FlarkDJEditor::paint(juce::Graphics& g)
     int xPos = 10;
     int spacing = 10;
 
-    // Top row - Effects (Filter, Reverb, Delay, Flanger, LFO)
-    for (int i = 0; i < 5; ++i)
+    // Top row - Effects (Filter, Reverb, Delay, Flanger, Isolator, LFO)
+    for (int i = 0; i < 6; ++i)
     {
         g.drawRect(xPos + i * (sectionWidth + spacing), yPos, sectionWidth, sectionHeight, 3);
     }
@@ -205,8 +221,8 @@ void FlarkDJEditor::paint(juce::Graphics& g)
     g.setFont(juce::Font(13.0f, juce::Font::bold));
     yPos = 93;
 
-    const char* titles[] = {"FILTER", "REVERB", "DELAY", "FLANGER", "LFO"};
-    for (int i = 0; i < 5; ++i)
+    const char* titles[] = {"FILTER", "REVERB", "DELAY", "FLANGER", "ISOLATOR", "LFO"};
+    for (int i = 0; i < 6; ++i)
     {
         int titleX = xPos + i * (sectionWidth + spacing);
 
@@ -289,7 +305,17 @@ void FlarkDJEditor::resized()
     flangerFeedbackSlider.setBounds(flangerArea.removeFromTop(65));
     topRow.removeFromLeft(spacing);
 
-    // LFO section
+    // Isolator section (5th effect)
+    auto isolatorArea = topRow.removeFromLeft(sectionWidth).reduced(15, 15);
+    isolatorArea.removeFromTop(25);
+    isolatorEnabledButton.setBounds(isolatorArea.removeFromTop(25));
+    isolatorArea.removeFromTop(12);
+    isolatorPositionSlider.setBounds(isolatorArea.removeFromTop(40)); // Horizontal slider (shorter)
+    isolatorArea.removeFromTop(12);
+    isolatorQSlider.setBounds(isolatorArea.removeFromTop(80));
+    topRow.removeFromLeft(spacing);
+
+    // LFO section (modulator for all effects)
     auto lfoArea = topRow.removeFromLeft(sectionWidth).reduced(15, 15);
     lfoArea.removeFromTop(25);
     lfoArea.removeFromTop(5);

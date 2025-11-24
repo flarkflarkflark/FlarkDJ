@@ -10,7 +10,10 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "lint": "eslint src --ext .ts",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "package": "npm run build && npm pack",
+    "dist": "bash scripts/create-distribution.sh",
+    "prepublishOnly": "npm run build && npm test"
   },
   "keywords": [
     "dj",
@@ -27,6 +30,7 @@
     "@types/node": "^20.10.6",
     "@typescript-eslint/eslint-plugin": "^6.17.0",
     "@typescript-eslint/parser": "^6.17.0",
+    "electron-builder": "^26.0.12",
     "eslint": "^8.56.0",
     "jest": "^29.7.0",
     "ts-jest": "^29.1.1",
@@ -35,15 +39,43 @@
   "dependencies": {
     "web-audio-api": "^0.2.2"
   },
+  "build": {
+    "appId": "com.flarkdj.app",
+    "productName": "FlarkDJ",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "target": ["dir"],
+      "category": "public.app-category.music"
+    },
+    "win": {
+      "target": ["dir"]
+    },
+    "linux": {
+      "target": ["dir"],
+      "category": "Audio"
+    }
+  },
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
-    "setupFilesAfterEnv": ["<rootDir>/jest.setup.js"],
+    "setupFilesAfterEnv": [
+      "<rootDir>/jest.setup.js"
+    ],
     "globals": {
       "ts-jest": {
         "tsconfig": {
           "skipLibCheck": true,
-          "lib": ["ES2020", "DOM"]
+          "lib": [
+            "ES2020",
+            "DOM"
+          ]
         }
       }
     },

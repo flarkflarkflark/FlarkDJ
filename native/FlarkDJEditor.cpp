@@ -134,8 +134,8 @@ FlarkDJEditor::FlarkDJEditor(FlarkDJProcessor& p)
 
     // Enable resizing with constraints (AFTER all components are initialized)
     setResizable(true, true);
-    setResizeLimits(1200, 730, 1800, 1200);
-    setSize(1400, 820);
+    setResizeLimits(1200, 870, 1800, 1300);
+    setSize(1400, 920);
 }
 
 FlarkDJEditor::~FlarkDJEditor()
@@ -199,7 +199,7 @@ void FlarkDJEditor::paint(juce::Graphics& g)
     // Calculate section sizes based on current window size
     float scale = getWidth() / 1400.0f;
     int sectionWidth = static_cast<int>(400 * scale);
-    int sectionHeight = 330;  // Increased to fit all 5 LFO controls
+    int sectionHeight = 400;  // Increased for bigger knobs with labels on left
 
     // Section borders
     juce::Colour borderColour = orangeGlow.withAlpha(0.7f);
@@ -245,7 +245,7 @@ void FlarkDJEditor::resized()
 
     float scale = getWidth() / 1400.0f;
     int sectionWidth = static_cast<int>(400 * scale);
-    int sectionHeight = 330;  // Increased to fit all 5 LFO controls
+    int sectionHeight = 400;  // Taller for bigger knobs
     int spacing = 10;
 
     // ========== FIRST ROW - Filter, Reverb, Delay ==========
@@ -254,37 +254,39 @@ void FlarkDJEditor::resized()
     // Filter section
     auto filterArea = firstRow.removeFromLeft(sectionWidth).reduced(15, 15);
     filterArea.removeFromTop(25);
-    filterEnabledButton.setBounds(filterArea.removeFromTop(25));
-    filterArea.removeFromTop(12);
-    filterCutoffSlider.setBounds(filterArea.removeFromTop(75));
-    filterArea.removeFromTop(12);
-    filterResonanceSlider.setBounds(filterArea.removeFromTop(75));
-    filterArea.removeFromTop(8);
-    filterTypeCombo.setBounds(filterArea.removeFromTop(22));
+    filterEnabledButton.setBounds(filterArea.removeFromTop(30));
+    filterArea.removeFromTop(10);
+
+    // Bigger knobs with labels on left (label takes ~100px, knob ~120px + value ~50px)
+    filterCutoffSlider.setBounds(filterArea.removeFromTop(120));
+    filterArea.removeFromTop(10);
+    filterResonanceSlider.setBounds(filterArea.removeFromTop(120));
+    filterArea.removeFromTop(10);
+    filterTypeCombo.setBounds(filterArea.removeFromLeft(270).removeFromTop(26));
     firstRow.removeFromLeft(spacing);
 
     // Reverb section
     auto reverbArea = firstRow.removeFromLeft(sectionWidth).reduced(15, 15);
     reverbArea.removeFromTop(25);
-    reverbEnabledButton.setBounds(reverbArea.removeFromTop(25));
-    reverbArea.removeFromTop(12);
-    reverbRoomSizeSlider.setBounds(reverbArea.removeFromTop(65));
-    reverbArea.removeFromTop(12);
-    reverbDampingSlider.setBounds(reverbArea.removeFromTop(65));
-    reverbArea.removeFromTop(12);
-    reverbWetDrySlider.setBounds(reverbArea.removeFromTop(65));
+    reverbEnabledButton.setBounds(reverbArea.removeFromTop(30));
+    reverbArea.removeFromTop(10);
+    reverbRoomSizeSlider.setBounds(reverbArea.removeFromTop(100));
+    reverbArea.removeFromTop(10);
+    reverbDampingSlider.setBounds(reverbArea.removeFromTop(100));
+    reverbArea.removeFromTop(10);
+    reverbWetDrySlider.setBounds(reverbArea.removeFromTop(100));
     firstRow.removeFromLeft(spacing);
 
     // Delay section
     auto delayArea = firstRow.removeFromLeft(sectionWidth).reduced(15, 15);
     delayArea.removeFromTop(25);
-    delayEnabledButton.setBounds(delayArea.removeFromTop(25));
-    delayArea.removeFromTop(12);
-    delayTimeSlider.setBounds(delayArea.removeFromTop(65));
-    delayArea.removeFromTop(12);
-    delayFeedbackSlider.setBounds(delayArea.removeFromTop(65));
-    delayArea.removeFromTop(12);
-    delayWetDrySlider.setBounds(delayArea.removeFromTop(65));
+    delayEnabledButton.setBounds(delayArea.removeFromTop(30));
+    delayArea.removeFromTop(10);
+    delayTimeSlider.setBounds(delayArea.removeFromTop(100));
+    delayArea.removeFromTop(10);
+    delayFeedbackSlider.setBounds(delayArea.removeFromTop(100));
+    delayArea.removeFromTop(10);
+    delayWetDrySlider.setBounds(delayArea.removeFromTop(100));
 
     area.removeFromTop(spacing);
 
@@ -294,52 +296,53 @@ void FlarkDJEditor::resized()
     // Flanger section
     auto flangerArea = secondRow.removeFromLeft(sectionWidth).reduced(15, 15);
     flangerArea.removeFromTop(25);
-    flangerEnabledButton.setBounds(flangerArea.removeFromTop(25));
-    flangerArea.removeFromTop(12);
-    flangerRateSlider.setBounds(flangerArea.removeFromTop(65));
-    flangerArea.removeFromTop(12);
-    flangerDepthSlider.setBounds(flangerArea.removeFromTop(65));
-    flangerArea.removeFromTop(12);
-    flangerFeedbackSlider.setBounds(flangerArea.removeFromTop(65));
+    flangerEnabledButton.setBounds(flangerArea.removeFromTop(30));
+    flangerArea.removeFromTop(10);
+    flangerRateSlider.setBounds(flangerArea.removeFromTop(100));
+    flangerArea.removeFromTop(10);
+    flangerDepthSlider.setBounds(flangerArea.removeFromTop(100));
+    flangerArea.removeFromTop(10);
+    flangerFeedbackSlider.setBounds(flangerArea.removeFromTop(100));
     secondRow.removeFromLeft(spacing);
 
     // Isolator section
     auto isolatorArea = secondRow.removeFromLeft(sectionWidth).reduced(15, 15);
     isolatorArea.removeFromTop(25);
-    isolatorEnabledButton.setBounds(isolatorArea.removeFromTop(25));
-    isolatorArea.removeFromTop(12);
-    isolatorPositionSlider.setBounds(isolatorArea.removeFromTop(40)); // Horizontal slider
-    isolatorArea.removeFromTop(12);
-    isolatorQSlider.setBounds(isolatorArea.removeFromTop(80));
+    isolatorEnabledButton.setBounds(isolatorArea.removeFromTop(30));
+    isolatorArea.removeFromTop(15);
+    isolatorPositionSlider.setBounds(isolatorArea.removeFromTop(50)); // Horizontal slider (bigger)
+    isolatorArea.removeFromTop(20);
+    isolatorQSlider.setBounds(isolatorArea.removeFromTop(120)); // Bigger rotary knob
     secondRow.removeFromLeft(spacing);
 
     // LFO section (with BPM sync)
     auto lfoArea = secondRow.removeFromLeft(sectionWidth).reduced(15, 15);
     lfoArea.removeFromTop(25);
-    lfoRateSlider.setBounds(lfoArea.removeFromTop(55));
-    lfoArea.removeFromTop(5);
-    lfoDepthSlider.setBounds(lfoArea.removeFromTop(55));
+    lfoRateSlider.setBounds(lfoArea.removeFromTop(100)); // Bigger knob
     lfoArea.removeFromTop(10);
-    lfoWaveformCombo.setBounds(lfoArea.removeFromTop(26));
-    lfoArea.removeFromTop(12);
-    lfoSyncButton.setBounds(lfoArea.removeFromTop(28));
-    lfoArea.removeFromTop(12);
-    lfoSyncRateCombo.setBounds(lfoArea.removeFromTop(28));
+    lfoDepthSlider.setBounds(lfoArea.removeFromTop(100)); // Bigger knob
+    lfoArea.removeFromTop(15);
+    lfoWaveformCombo.setBounds(lfoArea.removeFromTop(28));
+    lfoArea.removeFromTop(15);
+    lfoSyncButton.setBounds(lfoArea.removeFromTop(30));
+    lfoArea.removeFromTop(15);
+    lfoSyncRateCombo.setBounds(lfoArea.removeFromTop(30));
 }
 
 //==============================================================================
 void FlarkDJEditor::setupSlider(juce::Slider& slider, juce::Slider::SliderStyle style)
 {
     slider.setSliderStyle(style);
-    slider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 70, 18);
 
-    // Apply DJ knob look and feel for rotary sliders only
+    // Show value on right side for rotary knobs, below for linear sliders
     if (style == juce::Slider::Rotary)
     {
+        slider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 50, 18);
         slider.setLookAndFeel(&djKnobLookAndFeel);
     }
     else
     {
+        slider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 70, 18);
         // Linear sliders use default styling
         slider.setColour(juce::Slider::thumbColourId, juce::Colour(0xffff6600));
         slider.setColour(juce::Slider::trackColourId, juce::Colour(0xffff6600).withAlpha(0.6f));
@@ -370,12 +373,12 @@ juce::Label* FlarkDJEditor::createLabel(const juce::String& text, juce::Componen
 {
     auto label = std::make_unique<juce::Label>();
     label->setText(text, juce::dontSendNotification);
-    label->setJustificationType(juce::Justification::centred);
-    label->attachToComponent(&attachTo, false);
+    label->setJustificationType(juce::Justification::centredLeft);
+    label->attachToComponent(&attachTo, true);  // true = label on left side
 
-    // Professional label styling
-    label->setColour(juce::Label::textColourId, juce::Colour(0xffcccccc));
-    label->setFont(juce::Font(10.0f));
+    // Larger, more readable label styling
+    label->setColour(juce::Label::textColourId, juce::Colour(0xffdddddd));
+    label->setFont(juce::Font(13.0f, juce::Font::bold));
 
     addAndMakeVisible(*label);
 

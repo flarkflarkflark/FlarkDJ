@@ -4,11 +4,6 @@
 FlarkDJEditor::FlarkDJEditor(FlarkDJProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p)
 {
-    // Enable resizing with constraints
-    setResizable(true, true);
-    setResizeLimits(900, 700, 1600, 1200);
-    setSize(1200, 800);
-
     auto& params = audioProcessor.getParameters();
 
     // Create spectrum analyzer
@@ -157,6 +152,11 @@ FlarkDJEditor::FlarkDJEditor(FlarkDJProcessor& p)
     setupButton(masterBypassButton);
     masterBypassButton.setButtonText("Bypass");
     masterBypassAttachment.reset(new ButtonAttachment(params, "masterBypass", masterBypassButton));
+
+    // Enable resizing with constraints (AFTER all components are initialized)
+    setResizable(true, true);
+    setResizeLimits(900, 700, 1600, 1200);
+    setSize(1200, 800);
 }
 
 FlarkDJEditor::~FlarkDJEditor()

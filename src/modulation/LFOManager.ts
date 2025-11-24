@@ -1,4 +1,4 @@
-import { LFO, ModulationTarget } from '../types';
+import { LFO } from '../types';
 import { AudioEngine } from '../core/AudioEngine';
 
 export class LFOManager {

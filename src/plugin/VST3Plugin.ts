@@ -51,7 +51,7 @@ export class VST3Plugin {
   process(
     inputs: Float32Array[],
     outputs: Float32Array[],
-    numSamples: number
+    _numSamples: number
   ): void {
     if (inputs.length >= 2 && outputs.length >= 2) {
       this.wrapper.processAudio(

@@ -46,7 +46,6 @@ describe('LFOManager', () => {
     manager.createLFO('lfo1', 1, 'sine');
     manager.setTarget('lfo1', 'filter1', 'cutoff', 0.5);
 
-    const initialValue = effect.getParameter('cutoff');
     manager.process(1024);
     const modulatedValue = effect.getParameter('cutoff');
 

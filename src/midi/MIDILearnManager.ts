@@ -85,7 +85,7 @@ export class MIDILearnManager {
   }
 
   private applyMIDIControl(cc: number, channel: number, value: number): void {
-    this.mappings.forEach((config, key) => {
+    this.mappings.forEach((config, _key) => {
       if (config.midiCC === cc && config.channel === channel) {
         const effect = this.engine.getEffect(config.effectId);
         if (!effect) return;

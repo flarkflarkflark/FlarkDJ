@@ -153,7 +153,7 @@ export class StandaloneApp {
   // File processing (for batch processing audio files)
   async processAudioFile(
     inputData: Float32Array[],
-    sampleRate: number
+    _sampleRate: number
   ): Promise<Float32Array[]> {
     if (inputData.length !== 2) {
       throw new Error('Only stereo input is supported');

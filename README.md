@@ -76,11 +76,38 @@ A comprehensive DJ toolkit plugin with advanced effects, modulation, and control
 - Windows: NSIS and portable
 - Linux: AppImage, DEB, and RPM
 
+## Distribution Formats
+
+FlarkDJ is available in multiple formats:
+
+### TypeScript/JavaScript Package
+- npm package for Node.js and web applications
+- Full feature set including all advanced features
+- Platform: Cross-platform (Node.js, browsers)
+
+### Native Audio Plugins
+- **VST3** (Windows, macOS, Linux)
+- **Audio Unit** (macOS)
+- **Standalone** application
+- Native C++ implementation for professional DAWs
+- See [`native/`](native/) for building instructions
+
+### Plugin Packages
+Pre-built wrappers for audio plugin formats:
+- VST3, AU, AAX, LV2, CLAP
+- See [`PLUGINS.md`](PLUGINS.md) for details
+
 ## Installation
+
+### npm Package
 
 ```bash
 npm install flark-dj
 ```
+
+### Native Plugins
+
+See [`native/BUILD.md`](native/BUILD.md) for building instructions, or download pre-built binaries from [Releases](https://github.com/flarkflarkflark/FlarkDJ/releases).
 
 ## Quick Start
 
@@ -244,7 +271,14 @@ FlarkDJ/
 │   ├── presets/        # Preset management
 │   ├── snapshots/      # Scene management
 │   ├── analysis/       # Spectrum analyzer
+│   ├── plugin/         # Plugin wrappers (VST3, AU, etc.)
 │   └── types/          # TypeScript definitions
+├── native/
+│   ├── FlarkDJProcessor.*  # JUCE audio processor
+│   ├── FlarkDJEditor.*     # JUCE GUI editor
+│   ├── FlarkDJDSP.h        # C++ DSP implementations
+│   ├── CMakeLists.txt      # CMake build config
+│   └── BUILD.md            # Native build instructions
 ├── .github/
 │   └── workflows/      # CI/CD configuration
 └── scripts/            # Build scripts

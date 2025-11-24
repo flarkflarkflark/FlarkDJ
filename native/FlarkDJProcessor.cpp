@@ -32,6 +32,12 @@ FlarkDJProcessor::FlarkDJProcessor()
                     std::make_unique<juce::AudioParameterFloat>("delayWetDry", "Delay Wet/Dry",
                         0.0f, 1.0f, 0.5f),
 
+                    std::make_unique<juce::AudioParameterBool>("flangerEnabled", "Flanger Enabled", false),
+
+                    std::make_unique<juce::AudioParameterBool>("sidechainEnabled", "Sidechain Enabled", false),
+                    std::make_unique<juce::AudioParameterFloat>("sidechainThreshold", "Sidechain Threshold",
+                        0.0f, 1.0f, 0.5f),
+
                     std::make_unique<juce::AudioParameterFloat>("lfoRate", "LFO Rate",
                         juce::NormalisableRange<float>(0.1f, 20.0f, 0.1f, 0.5f), 1.0f),
                     std::make_unique<juce::AudioParameterFloat>("lfoDepth", "LFO Depth",
@@ -59,6 +65,11 @@ FlarkDJProcessor::FlarkDJProcessor()
     delayTime = parameters.getRawParameterValue("delayTime");
     delayFeedback = parameters.getRawParameterValue("delayFeedback");
     delayWetDry = parameters.getRawParameterValue("delayWetDry");
+
+    flangerEnabled = parameters.getRawParameterValue("flangerEnabled");
+
+    sidechainEnabled = parameters.getRawParameterValue("sidechainEnabled");
+    sidechainThreshold = parameters.getRawParameterValue("sidechainThreshold");
 
     lfoRate = parameters.getRawParameterValue("lfoRate");
     lfoDepth = parameters.getRawParameterValue("lfoDepth");

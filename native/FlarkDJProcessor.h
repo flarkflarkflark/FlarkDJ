@@ -86,6 +86,11 @@ private:
     std::atomic<float>* delayFeedback = nullptr;
     std::atomic<float>* delayWetDry = nullptr;
 
+    std::atomic<float>* flangerEnabled = nullptr;
+
+    std::atomic<float>* sidechainEnabled = nullptr;
+    std::atomic<float>* sidechainThreshold = nullptr;
+
     std::atomic<float>* lfoRate = nullptr;
     std::atomic<float>* lfoDepth = nullptr;
     std::atomic<float>* lfoWaveform = nullptr;

@@ -101,13 +101,12 @@ private:
     std::atomic<float>* lfoRate = nullptr;
     std::atomic<float>* lfoDepth = nullptr;
     std::atomic<float>* lfoWaveform = nullptr;
+    std::atomic<float>* lfoSync = nullptr;
+    std::atomic<float>* lfoSyncRate = nullptr;
 
     std::atomic<float>* isolatorEnabled = nullptr;
     std::atomic<float>* isolatorPosition = nullptr;
     std::atomic<float>* isolatorQ = nullptr;
-
-    std::atomic<float>* masterMix = nullptr;
-    std::atomic<float>* masterBypass = nullptr;
 
     //==============================================================================
     // Audio processing state

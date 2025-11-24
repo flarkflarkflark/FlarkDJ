@@ -122,16 +122,20 @@ FlarkDJEditor::FlarkDJEditor(FlarkDJProcessor& p)
     lfoWaveformCombo.addItemList(juce::StringArray{"Sine", "Square", "Triangle", "Sawtooth"}, 1);
     lfoWaveformAttachment.reset(new ComboBoxAttachment(params, "lfoWaveform", lfoWaveformCombo));
 
-    // ========== MASTER SECTION ==========
-    addAndMakeVisible(masterBypassButton);
-    setupButton(masterBypassButton);
-    masterBypassButton.setButtonText("Bypass");
-    masterBypassAttachment.reset(new ButtonAttachment(params, "masterBypass", masterBypassButton));
+    addAndMakeVisible(lfoSyncButton);
+    setupButton(lfoSyncButton);
+    lfoSyncButton.setButtonText("BPM Sync");
+    lfoSyncAttachment.reset(new ButtonAttachment(params, "lfoSync", lfoSyncButton));
+
+    addAndMakeVisible(lfoSyncRateCombo);
+    setupComboBox(lfoSyncRateCombo);
+    lfoSyncRateCombo.addItemList(juce::StringArray{"1/4", "1/8", "1/16", "1/32", "1/2", "1 Bar"}, 1);
+    lfoSyncRateAttachment.reset(new ComboBoxAttachment(params, "lfoSyncRate", lfoSyncRateCombo));
 
     // Enable resizing with constraints (AFTER all components are initialized)
     setResizable(true, true);
-    setResizeLimits(900, 700, 1600, 1200);
-    setSize(1200, 800);
+    setResizeLimits(1200, 600, 1800, 1000);
+    setSize(1400, 700);
 }
 
 FlarkDJEditor::~FlarkDJEditor()
@@ -193,10 +197,9 @@ void FlarkDJEditor::paint(juce::Graphics& g)
     g.fillRect(0, 80, getWidth(), 3);
 
     // Calculate section sizes based on current window size
-    float scale = getWidth() / 1200.0f;
-    int sectionWidth = static_cast<int>(220 * scale);
-    int sectionHeight = 220;
-    int visualHeight = 180;
+    float scale = getWidth() / 1400.0f;
+    int sectionWidth = static_cast<int>(400 * scale);
+    int sectionHeight = 250;
 
     // Section borders
     juce::Colour borderColour = orangeGlow.withAlpha(0.7f);
@@ -206,41 +209,33 @@ void FlarkDJEditor::paint(juce::Graphics& g)
     int xPos = 10;
     int spacing = 10;
 
-    // Top row - Effects (Filter, Reverb, Delay, Flanger, Isolator, LFO)
-    for (int i = 0; i < 6; ++i)
-    {
-        g.drawRect(xPos + i * (sectionWidth + spacing), yPos, sectionWidth, sectionHeight, 3);
-    }
-
-    // Bottom row - Master (compact)
-    yPos += sectionHeight + spacing;
-    int masterWidth = static_cast<int>((getWidth() - 20));
-    g.drawRect(xPos, yPos, masterWidth, 60, 3);
-
-    // Section titles with glow effect
-    g.setFont(juce::Font(13.0f, juce::Font::bold));
-    yPos = 93;
-
+    // 2 rows of 3 effects each
     const char* titles[] = {"FILTER", "REVERB", "DELAY", "FLANGER", "ISOLATOR", "LFO"};
-    for (int i = 0; i < 6; ++i)
+
+    for (int row = 0; row < 2; ++row)
     {
-        int titleX = xPos + i * (sectionWidth + spacing);
+        int rowY = yPos + row * (sectionHeight + spacing);
 
-        // Glow
-        g.setColour(orangeGlow.withAlpha(0.4f));
-        g.drawText(titles[i], titleX, yPos, sectionWidth, 20, juce::Justification::centred);
+        for (int col = 0; col < 3; ++col)
+        {
+            int idx = row * 3 + col;
+            int boxX = xPos + col * (sectionWidth + spacing);
 
-        // Main text
-        g.setColour(juce::Colours::white);
-        g.drawText(titles[i], titleX, yPos, sectionWidth, 20, juce::Justification::centred);
+            // Draw box
+            g.drawRect(boxX, rowY, sectionWidth, sectionHeight, 3);
+
+            // Draw title with glow effect
+            g.setFont(juce::Font(13.0f, juce::Font::bold));
+
+            // Glow
+            g.setColour(orangeGlow.withAlpha(0.4f));
+            g.drawText(titles[idx], boxX, rowY, sectionWidth, 20, juce::Justification::centred);
+
+            // Main text
+            g.setColour(juce::Colours::white);
+            g.drawText(titles[idx], boxX, rowY, sectionWidth, 20, juce::Justification::centred);
+        }
     }
-
-    // Master title
-    yPos += sectionHeight + spacing;
-    g.setColour(orangeGlow.withAlpha(0.4f));
-    g.drawText("MASTER", xPos, yPos, masterWidth, 20, juce::Justification::centred);
-    g.setColour(juce::Colours::white);
-    g.drawText("MASTER", xPos, yPos, masterWidth, 20, juce::Justification::centred);
 }
 
 void FlarkDJEditor::resized()
@@ -248,18 +243,17 @@ void FlarkDJEditor::resized()
     auto area = getLocalBounds();
     area.removeFromTop(83); // Logo area + accent line
 
-    float scale = getWidth() / 1200.0f;
-    int sectionWidth = static_cast<int>(220 * scale);
-    int sectionHeight = 220;
-    int visualHeight = 180;
+    float scale = getWidth() / 1400.0f;
+    int sectionWidth = static_cast<int>(400 * scale);
+    int sectionHeight = 250;
     int spacing = 10;
 
-    // ========== TOP ROW - EFFECTS ==========
-    auto topRow = area.removeFromTop(sectionHeight);
+    // ========== FIRST ROW - Filter, Reverb, Delay ==========
+    auto firstRow = area.removeFromTop(sectionHeight);
 
     // Filter section
-    auto filterArea = topRow.removeFromLeft(sectionWidth).reduced(15, 15);
-    filterArea.removeFromTop(25); // Title space
+    auto filterArea = firstRow.removeFromLeft(sectionWidth).reduced(15, 15);
+    filterArea.removeFromTop(25);
     filterEnabledButton.setBounds(filterArea.removeFromTop(25));
     filterArea.removeFromTop(12);
     filterCutoffSlider.setBounds(filterArea.removeFromTop(75));
@@ -267,10 +261,10 @@ void FlarkDJEditor::resized()
     filterResonanceSlider.setBounds(filterArea.removeFromTop(75));
     filterArea.removeFromTop(8);
     filterTypeCombo.setBounds(filterArea.removeFromTop(22));
-    topRow.removeFromLeft(spacing);
+    firstRow.removeFromLeft(spacing);
 
     // Reverb section
-    auto reverbArea = topRow.removeFromLeft(sectionWidth).reduced(15, 15);
+    auto reverbArea = firstRow.removeFromLeft(sectionWidth).reduced(15, 15);
     reverbArea.removeFromTop(25);
     reverbEnabledButton.setBounds(reverbArea.removeFromTop(25));
     reverbArea.removeFromTop(12);
@@ -279,10 +273,10 @@ void FlarkDJEditor::resized()
     reverbDampingSlider.setBounds(reverbArea.removeFromTop(65));
     reverbArea.removeFromTop(12);
     reverbWetDrySlider.setBounds(reverbArea.removeFromTop(65));
-    topRow.removeFromLeft(spacing);
+    firstRow.removeFromLeft(spacing);
 
     // Delay section
-    auto delayArea = topRow.removeFromLeft(sectionWidth).reduced(15, 15);
+    auto delayArea = firstRow.removeFromLeft(sectionWidth).reduced(15, 15);
     delayArea.removeFromTop(25);
     delayEnabledButton.setBounds(delayArea.removeFromTop(25));
     delayArea.removeFromTop(12);
@@ -291,10 +285,14 @@ void FlarkDJEditor::resized()
     delayFeedbackSlider.setBounds(delayArea.removeFromTop(65));
     delayArea.removeFromTop(12);
     delayWetDrySlider.setBounds(delayArea.removeFromTop(65));
-    topRow.removeFromLeft(spacing);
+
+    area.removeFromTop(spacing);
+
+    // ========== SECOND ROW - Flanger, Isolator, LFO ==========
+    auto secondRow = area.removeFromTop(sectionHeight);
 
     // Flanger section
-    auto flangerArea = topRow.removeFromLeft(sectionWidth).reduced(15, 15);
+    auto flangerArea = secondRow.removeFromLeft(sectionWidth).reduced(15, 15);
     flangerArea.removeFromTop(25);
     flangerEnabledButton.setBounds(flangerArea.removeFromTop(25));
     flangerArea.removeFromTop(12);
@@ -303,36 +301,30 @@ void FlarkDJEditor::resized()
     flangerDepthSlider.setBounds(flangerArea.removeFromTop(65));
     flangerArea.removeFromTop(12);
     flangerFeedbackSlider.setBounds(flangerArea.removeFromTop(65));
-    topRow.removeFromLeft(spacing);
+    secondRow.removeFromLeft(spacing);
 
-    // Isolator section (5th effect)
-    auto isolatorArea = topRow.removeFromLeft(sectionWidth).reduced(15, 15);
+    // Isolator section
+    auto isolatorArea = secondRow.removeFromLeft(sectionWidth).reduced(15, 15);
     isolatorArea.removeFromTop(25);
     isolatorEnabledButton.setBounds(isolatorArea.removeFromTop(25));
     isolatorArea.removeFromTop(12);
-    isolatorPositionSlider.setBounds(isolatorArea.removeFromTop(40)); // Horizontal slider (shorter)
+    isolatorPositionSlider.setBounds(isolatorArea.removeFromTop(40)); // Horizontal slider
     isolatorArea.removeFromTop(12);
     isolatorQSlider.setBounds(isolatorArea.removeFromTop(80));
-    topRow.removeFromLeft(spacing);
+    secondRow.removeFromLeft(spacing);
 
-    // LFO section (modulator for all effects)
-    auto lfoArea = topRow.removeFromLeft(sectionWidth).reduced(15, 15);
+    // LFO section (with BPM sync)
+    auto lfoArea = secondRow.removeFromLeft(sectionWidth).reduced(15, 15);
     lfoArea.removeFromTop(25);
-    lfoArea.removeFromTop(5);
-    lfoRateSlider.setBounds(lfoArea.removeFromTop(80));
-    lfoArea.removeFromTop(12);
-    lfoDepthSlider.setBounds(lfoArea.removeFromTop(80));
+    lfoRateSlider.setBounds(lfoArea.removeFromTop(70));
+    lfoArea.removeFromTop(8);
+    lfoDepthSlider.setBounds(lfoArea.removeFromTop(70));
     lfoArea.removeFromTop(8);
     lfoWaveformCombo.setBounds(lfoArea.removeFromTop(22));
-
-    area.removeFromTop(spacing);
-
-    // ========== BOTTOM ROW - MASTER ==========
-    auto masterArea = area.removeFromTop(60).reduced(15, 15);
-    masterArea.removeFromTop(25);
-
-    // Bypass button centered
-    masterBypassButton.setBounds(masterArea.removeFromLeft(120));
+    lfoArea.removeFromTop(8);
+    lfoSyncButton.setBounds(lfoArea.removeFromTop(22));
+    lfoArea.removeFromTop(8);
+    lfoSyncRateCombo.setBounds(lfoArea.removeFromTop(22));
 }
 
 //==============================================================================

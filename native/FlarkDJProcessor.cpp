@@ -52,16 +52,15 @@ FlarkDJProcessor::FlarkDJProcessor()
                         0.0f, 1.0f, 0.3f),
                     std::make_unique<juce::AudioParameterChoice>("lfoWaveform", "LFO Waveform",
                         juce::StringArray{"Sine", "Square", "Triangle", "Sawtooth"}, 0),
+                    std::make_unique<juce::AudioParameterBool>("lfoSync", "LFO BPM Sync", false),
+                    std::make_unique<juce::AudioParameterChoice>("lfoSyncRate", "LFO Sync Rate",
+                        juce::StringArray{"1/4", "1/8", "1/16", "1/32", "1/2", "1 Bar"}, 0),
 
                     std::make_unique<juce::AudioParameterBool>("isolatorEnabled", "Isolator Enabled", false),
                     std::make_unique<juce::AudioParameterFloat>("isolatorPosition", "Isolator Position",
                         -1.0f, 1.0f, 0.0f),
                     std::make_unique<juce::AudioParameterFloat>("isolatorQ", "Isolator Q",
-                        0.5f, 10.0f, 2.0f),
-
-                    std::make_unique<juce::AudioParameterFloat>("masterMix", "Master Mix",
-                        0.0f, 1.0f, 1.0f),
-                    std::make_unique<juce::AudioParameterBool>("masterBypass", "Master Bypass", false)
+                        0.5f, 10.0f, 2.0f)
                 })
 {
     // Get parameter pointers
@@ -92,13 +91,12 @@ FlarkDJProcessor::FlarkDJProcessor()
     lfoRate = parameters.getRawParameterValue("lfoRate");
     lfoDepth = parameters.getRawParameterValue("lfoDepth");
     lfoWaveform = parameters.getRawParameterValue("lfoWaveform");
+    lfoSync = parameters.getRawParameterValue("lfoSync");
+    lfoSyncRate = parameters.getRawParameterValue("lfoSyncRate");
 
     isolatorEnabled = parameters.getRawParameterValue("isolatorEnabled");
     isolatorPosition = parameters.getRawParameterValue("isolatorPosition");
     isolatorQ = parameters.getRawParameterValue("isolatorQ");
-
-    masterMix = parameters.getRawParameterValue("masterMix");
-    masterBypass = parameters.getRawParameterValue("masterBypass");
 }
 
 FlarkDJProcessor::~FlarkDJProcessor()
@@ -166,10 +164,6 @@ void FlarkDJProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Midi
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
-    // Check bypass
-    if (masterBypass->load() > 0.5f)
-        return;
-
     // Get audio buffers
     auto* leftChannel  = buffer.getWritePointer(0);
     auto* rightChannel = buffer.getWritePointer(1);
@@ -177,20 +171,6 @@ void FlarkDJProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Midi
 
     // Process audio through FlarkDJ engine
     processAudio(leftChannel, rightChannel, leftChannel, rightChannel, numSamples);
-
-    // Apply master mix
-    float mix = masterMix->load();
-    if (mix < 1.0f)
-    {
-        auto* leftInput = buffer.getReadPointer(0);
-        auto* rightInput = buffer.getReadPointer(1);
-
-        for (int i = 0; i < numSamples; ++i)
-        {
-            leftChannel[i] = leftInput[i] * (1.0f - mix) + leftChannel[i] * mix;
-            rightChannel[i] = rightInput[i] * (1.0f - mix) + rightChannel[i] * mix;
-        }
-    }
 
     // Calculate RMS level for spectrum display
     float rms = 0.0f;
@@ -274,6 +254,26 @@ void FlarkDJProcessor::processAudio(float* leftIn, float* rightIn,
     lfo.setRate(lfoRate->load());
     int lfoWaveformInt = static_cast<int>(lfoWaveform->load());
     lfo.setWaveform(static_cast<FlarkLFO::Waveform>(lfoWaveformInt));
+
+    // BPM sync
+    bool syncEnabled = lfoSync->load() > 0.5f;
+    lfo.setSyncEnabled(syncEnabled);
+    if (syncEnabled)
+    {
+        auto playHead = getPlayHead();
+        if (playHead != nullptr)
+        {
+            if (auto posInfo = playHead->getPosition())
+            {
+                if (posInfo->getBpm().hasValue())
+                {
+                    lfo.setBPM(*posInfo->getBpm());
+                }
+            }
+        }
+        int syncRateInt = static_cast<int>(lfoSyncRate->load());
+        lfo.setSyncRate(syncRateInt);
+    }
 
     // Process each sample
     for (int i = 0; i < numSamples; ++i)

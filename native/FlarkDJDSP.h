@@ -41,6 +41,22 @@ public:
         rate = rateHz;
     }
 
+    void setBPM(double bpm)
+    {
+        currentBPM = bpm;
+    }
+
+    void setSyncEnabled(bool enabled)
+    {
+        syncEnabled = enabled;
+    }
+
+    // Sync rate divisions: 0=1/4, 1=1/8, 2=1/16, 3=1/32, 4=1/2, 5=1bar
+    void setSyncRate(int division)
+    {
+        syncDivision = division;
+    }
+
     float process()
     {
         float output = 0.0f;
@@ -61,8 +77,25 @@ public:
                 break;
         }
 
+        // Calculate actual rate (Hz)
+        float actualRate = rate;
+        if (syncEnabled && currentBPM > 0.0)
+        {
+            // Convert BPM to Hz based on division
+            float beatsPerSecond = currentBPM / 60.0f;
+            switch (syncDivision)
+            {
+                case 0: actualRate = beatsPerSecond;          break; // 1/4 note
+                case 1: actualRate = beatsPerSecond * 2.0f;   break; // 1/8 note
+                case 2: actualRate = beatsPerSecond * 4.0f;   break; // 1/16 note
+                case 3: actualRate = beatsPerSecond * 8.0f;   break; // 1/32 note
+                case 4: actualRate = beatsPerSecond * 0.5f;   break; // 1/2 note
+                case 5: actualRate = beatsPerSecond * 0.25f;  break; // 1 bar (4 beats)
+            }
+        }
+
         // Advance phase
-        phase += rate / sampleRate;
+        phase += actualRate / sampleRate;
         if (phase >= 1.0f)
             phase -= 1.0f;
 
@@ -74,6 +107,9 @@ private:
     float rate = 1.0f;
     float sampleRate;
     Waveform waveform = Sine;
+    double currentBPM = 120.0;
+    bool syncEnabled = false;
+    int syncDivision = 0; // 0=1/4, 1=1/8, 2=1/16, 3=1/32, 4=1/2, 5=1bar
 };
 
 //==============================================================================

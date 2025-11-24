@@ -264,9 +264,8 @@ private:
     juce::Slider lfoRateSlider;
     juce::Slider lfoDepthSlider;
     juce::ComboBox lfoWaveformCombo;
-
-    // Master controls
-    juce::ToggleButton masterBypassButton;
+    juce::ToggleButton lfoSyncButton;
+    juce::ComboBox lfoSyncRateCombo;
 
     //==============================================================================
     // Labels
@@ -305,8 +304,8 @@ private:
     std::unique_ptr<SliderAttachment> lfoRateAttachment;
     std::unique_ptr<SliderAttachment> lfoDepthAttachment;
     std::unique_ptr<ComboBoxAttachment> lfoWaveformAttachment;
-
-    std::unique_ptr<ButtonAttachment> masterBypassAttachment;
+    std::unique_ptr<ButtonAttachment> lfoSyncAttachment;
+    std::unique_ptr<ComboBoxAttachment> lfoSyncRateAttachment;
 
     //==============================================================================
     void setupSlider(juce::Slider& slider, juce::Slider::SliderStyle style = juce::Slider::Rotary);

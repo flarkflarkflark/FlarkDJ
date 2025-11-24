@@ -6,10 +6,6 @@ FlarkDJEditor::FlarkDJEditor(FlarkDJProcessor& p)
 {
     auto& params = audioProcessor.getParameters();
 
-    // Create spectrum analyzer
-    spectrumAnalyzer = std::make_unique<SpectrumAnalyzer>(audioProcessor);
-    addAndMakeVisible(*spectrumAnalyzer);
-
     // ========== FILTER SECTION ==========
     addAndMakeVisible(filterEnabledButton);
     setupButton(filterEnabledButton);
@@ -200,10 +196,10 @@ void FlarkDJEditor::paint(juce::Graphics& g)
         g.drawRect(xPos + i * (sectionWidth + spacing), yPos, sectionWidth, sectionHeight, 3);
     }
 
-    // Bottom row - Master + Spectrum
+    // Bottom row - Master (compact)
     yPos += sectionHeight + spacing;
     int masterWidth = static_cast<int>((getWidth() - 20));
-    g.drawRect(xPos, yPos, masterWidth, 150, 3);
+    g.drawRect(xPos, yPos, masterWidth, 60, 3);
 
     // Section titles with glow effect
     g.setFont(juce::Font(13.0f, juce::Font::bold));
@@ -226,9 +222,9 @@ void FlarkDJEditor::paint(juce::Graphics& g)
     // Master title
     yPos += sectionHeight + spacing;
     g.setColour(orangeGlow.withAlpha(0.4f));
-    g.drawText("MASTER & SPECTRUM ANALYZER", xPos, yPos, masterWidth, 20, juce::Justification::centred);
+    g.drawText("MASTER", xPos, yPos, masterWidth, 20, juce::Justification::centred);
     g.setColour(juce::Colours::white);
-    g.drawText("MASTER & SPECTRUM ANALYZER", xPos, yPos, masterWidth, 20, juce::Justification::centred);
+    g.drawText("MASTER", xPos, yPos, masterWidth, 20, juce::Justification::centred);
 }
 
 void FlarkDJEditor::resized()
@@ -305,17 +301,12 @@ void FlarkDJEditor::resized()
 
     area.removeFromTop(spacing);
 
-    // ========== BOTTOM ROW - MASTER & SPECTRUM ==========
-    auto masterArea = area.removeFromTop(150).reduced(15, 15);
+    // ========== BOTTOM ROW - MASTER ==========
+    auto masterArea = area.removeFromTop(60).reduced(15, 15);
     masterArea.removeFromTop(25);
 
-    // Bypass button at left side
-    auto controlsArea = masterArea.removeFromLeft(120);
-    masterBypassButton.setBounds(controlsArea.removeFromTop(30));
-
-    // Spectrum analyzer takes remaining space
-    masterArea.removeFromLeft(10);
-    spectrumAnalyzer->setBounds(masterArea);
+    // Bypass button centered
+    masterBypassButton.setBounds(masterArea.removeFromLeft(120));
 }
 
 //==============================================================================

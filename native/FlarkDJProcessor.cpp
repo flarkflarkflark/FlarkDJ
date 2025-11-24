@@ -10,9 +10,9 @@ FlarkDJProcessor::FlarkDJProcessor()
                 {
                     std::make_unique<juce::AudioParameterBool>("filterEnabled", "Filter Enabled", true),
                     std::make_unique<juce::AudioParameterFloat>("filterCutoff", "Filter Cutoff",
-                        juce::NormalisableRange<float>(20.0f, 20000.0f, 1.0f, 0.3f), 1000.0f),
+                        juce::NormalisableRange<float>(20.0f, 20000.0f, 1.0f, 0.3f), 400.0f),
                     std::make_unique<juce::AudioParameterFloat>("filterResonance", "Filter Resonance",
-                        0.1f, 10.0f, 1.0f),
+                        0.1f, 10.0f, 3.0f),
                     std::make_unique<juce::AudioParameterChoice>("filterType", "Filter Type",
                         juce::StringArray{"Lowpass", "Highpass", "Bandpass"}, 0),
 

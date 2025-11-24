@@ -209,106 +209,6 @@ public:
 };
 
 //==============================================================================
-// Real-time spectrum analyzer component
-class SpectrumAnalyzer : public juce::Component, public juce::Timer
-{
-public:
-    SpectrumAnalyzer(FlarkDJProcessor& proc) : processor(proc)
-    {
-        // Initialize bar levels
-        for (int i = 0; i < numBars; ++i)
-        {
-            barLevels[i] = 0.0f;
-            barPeaks[i] = 0.0f;
-            peakHoldTime[i] = 0;
-        }
-
-        startTimerHz(30); // 30 FPS refresh
-    }
-
-    void paint(juce::Graphics& g) override
-    {
-        g.fillAll(juce::Colour(0xff0d0d0d));
-        auto bounds = getLocalBounds().reduced(2);
-
-        // Get real audio level from processor
-        float level = processor.getOutputLevel();
-        level = juce::jlimit(0.0f, 1.0f, level * 4.0f); // Scale up for visibility
-
-        // Draw frequency spectrum bars
-        const float barWidth = bounds.getWidth() / (float)numBars;
-
-        for (int i = 0; i < numBars; ++i)
-        {
-            // Frequency weighting - bass has more energy, treble less
-            float freqBin = i / (float)numBars;
-            float freqWeight = 1.0f - (freqBin * freqBin * 0.7f); // Bass boost
-
-            // Add pseudo-random variation based on bar index to simulate frequency content
-            float phaseOffset = i * 2.5f;
-            float randomVariation = (std::sin(phaseOffset) * 0.5f + 0.5f) * 0.4f + 0.6f;
-
-            float target = level * freqWeight * randomVariation;
-
-            // Attack and decay
-            if (target > barLevels[i])
-            {
-                barLevels[i] = barLevels[i] + (target - barLevels[i]) * 0.7f; // Fast attack
-                if (barLevels[i] > barPeaks[i])
-                {
-                    barPeaks[i] = barLevels[i];
-                    peakHoldTime[i] = 15; // Hold for 15 frames (0.5 sec)
-                }
-            }
-            else
-            {
-                barLevels[i] *= 0.75f; // Slower decay
-            }
-
-            // Peak decay
-            if (peakHoldTime[i] > 0)
-                peakHoldTime[i]--;
-            else
-                barPeaks[i] *= 0.95f;
-
-            float height = barLevels[i] * bounds.getHeight();
-
-            // Color gradient from orange to yellow based on intensity
-            juce::Colour barColor = juce::Colour(0xffff6600).interpolatedWith(
-                juce::Colour(0xffffff00), height / bounds.getHeight());
-
-            g.setColour(barColor.withAlpha(0.85f));
-            g.fillRect(i * barWidth + 1, bounds.getHeight() - height, barWidth - 2, height);
-        }
-
-        // Draw grid lines
-        g.setColour(juce::Colour(0xff3a3a3a).withAlpha(0.4f));
-        for (int i = 1; i < 4; ++i)
-        {
-            int y = bounds.getHeight() * i / 4;
-            g.drawHorizontalLine(y, 0, bounds.getWidth());
-        }
-
-        // Label
-        g.setColour(juce::Colour(0xffff6600));
-        g.setFont(juce::Font(10.0f, juce::Font::bold));
-        g.drawText("SPECTRUM", bounds.getX(), bounds.getY() + 2, 80, 15, juce::Justification::left);
-    }
-
-    void timerCallback() override
-    {
-        repaint();
-    }
-
-private:
-    static constexpr int numBars = 80;
-    FlarkDJProcessor& processor;
-    float barLevels[80];
-    float barPeaks[80];
-    int peakHoldTime[80];
-};
-
-//==============================================================================
 class FlarkDJEditor : public juce::AudioProcessorEditor
 {
 public:
@@ -329,10 +229,6 @@ private:
     //==============================================================================
     // Logo
     juce::Image logoImage;
-
-    //==============================================================================
-    // Visual components
-    std::unique_ptr<SpectrumAnalyzer> spectrumAnalyzer;
 
     //==============================================================================
     // Filter controls

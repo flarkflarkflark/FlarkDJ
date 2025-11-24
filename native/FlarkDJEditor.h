@@ -31,10 +31,14 @@ public:
                          float sliderPos, float rotaryStartAngle, float rotaryEndAngle,
                          juce::Slider& slider) override
     {
-        auto bounds = juce::Rectangle<int>(x, y, width, height).toFloat().reduced(10);
+        auto bounds = juce::Rectangle<int>(x, y, width, height).toFloat().reduced(3);
         auto radius = juce::jmin(bounds.getWidth(), bounds.getHeight()) / 2.0f;
         auto toAngle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
         auto centre = bounds.getCentre();
+
+        // Outer shadow for depth
+        g.setColour(juce::Colours::black.withAlpha(0.6f));
+        g.fillEllipse(centre.x - radius - 2, centre.y - radius - 1, (radius + 2) * 2, (radius + 2) * 2);
 
         // Draw faceted outer ring (8 segments like DJ knob)
         const int numFacets = 8;
@@ -50,7 +54,7 @@ public:
             float x2 = centre.x + radius * std::cos(angle2);
             float y2 = centre.y + radius * std::sin(angle2);
 
-            float innerRadius = radius * 0.7f;
+            float innerRadius = radius * 0.68f;
             float x3 = centre.x + innerRadius * std::cos(angle2);
             float y3 = centre.y + innerRadius * std::sin(angle2);
             float x4 = centre.x + innerRadius * std::cos(angle1);
@@ -67,63 +71,139 @@ public:
             facetedRing.closeSubPath();
         }
 
-        // Draw black faceted ring with gradient
+        // Enhanced gradient for faceted ring (darker, more contrast)
         juce::ColourGradient ringGradient(
-            juce::Colour(0xff1a1a1a), centre.x - radius, centre.y - radius,
-            juce::Colour(0xff000000), centre.x + radius, centre.y + radius,
+            juce::Colour(0xff252525), centre.x - radius, centre.y - radius,
+            juce::Colour(0xff0a0a0a), centre.x + radius, centre.y + radius,
             false);
         g.setGradientFill(ringGradient);
         g.fillPath(facetedRing);
 
-        // Draw inner shadow on facets
-        g.setColour(juce::Colours::black.withAlpha(0.5f));
-        g.strokePath(facetedRing, juce::PathStrokeType(1.0f));
+        // Per-facet highlights for 3D effect
+        for (int i = 0; i < numFacets; ++i)
+        {
+            float angle1 = (i * juce::MathConstants<float>::twoPi / numFacets) - juce::MathConstants<float>::pi / 2;
+            float angle2 = ((i + 1) * juce::MathConstants<float>::twoPi / numFacets) - juce::MathConstants<float>::pi / 2;
+            float midAngle = (angle1 + angle2) / 2.0f;
 
-        // Draw brushed metal center cap
-        auto centerRadius = radius * 0.65f;
+            // Light source from top-left
+            float lightIntensity = std::max(0.0f, -std::sin(midAngle - juce::MathConstants<float>::pi * 0.75f));
 
-        // Radial gradient for metallic look
+            if (lightIntensity > 0.3f)
+            {
+                juce::Path facet;
+                float x1 = centre.x + radius * std::cos(angle1);
+                float y1 = centre.y + radius * std::sin(angle1);
+                float x2 = centre.x + radius * std::cos(angle2);
+                float y2 = centre.y + radius * std::sin(angle2);
+
+                float innerRadius = radius * 0.68f;
+                float x3 = centre.x + innerRadius * std::cos(angle2);
+                float y3 = centre.y + innerRadius * std::sin(angle2);
+                float x4 = centre.x + innerRadius * std::cos(angle1);
+                float y4 = centre.y + innerRadius * std::sin(angle1);
+
+                facet.startNewSubPath(x1, y1);
+                facet.lineTo(x2, y2);
+                facet.lineTo(x3, y3);
+                facet.lineTo(x4, y4);
+                facet.closeSubPath();
+
+                g.setColour(juce::Colours::white.withAlpha(lightIntensity * 0.15f));
+                g.fillPath(facet);
+            }
+        }
+
+        // Inner shadow on facets for depth
+        g.setColour(juce::Colours::black.withAlpha(0.7f));
+        g.strokePath(facetedRing, juce::PathStrokeType(1.5f));
+
+        // Draw brushed metal center cap with enhanced realism
+        auto centerRadius = radius * 0.62f;
+
+        // Outer bevel edge
+        g.setColour(juce::Colour(0xff333333));
+        g.fillEllipse(centre.x - centerRadius - 2, centre.y - centerRadius - 2,
+                     (centerRadius + 2) * 2, (centerRadius + 2) * 2);
+
+        // Multi-layer radial gradient for realistic metal
         juce::ColourGradient metalGradient(
-            juce::Colour(0xff999999), centre.x, centre.y - centerRadius,
-            juce::Colour(0xff555555), centre.x, centre.y + centerRadius,
+            juce::Colour(0xffb0b0b0), centre.x, centre.y - centerRadius * 0.8f,
+            juce::Colour(0xff606060), centre.x, centre.y + centerRadius * 0.8f,
             false);
+        metalGradient.addColour(0.3, juce::Colour(0xff888888));
+        metalGradient.addColour(0.7, juce::Colour(0xff707070));
+
         g.setGradientFill(metalGradient);
         g.fillEllipse(centre.x - centerRadius, centre.y - centerRadius,
                      centerRadius * 2, centerRadius * 2);
 
-        // Draw brushed texture lines
-        g.setColour(juce::Colour(0xff777777).withAlpha(0.3f));
-        for (int i = 0; i < 20; ++i)
+        // Enhanced brushed texture lines (more dense and realistic)
+        g.setColour(juce::Colour(0xff909090).withAlpha(0.25f));
+        for (int i = 0; i < 36; ++i)
         {
-            float angle = i * juce::MathConstants<float>::pi / 10;
-            float x1 = centre.x + (centerRadius * 0.3f) * std::cos(angle);
-            float y1 = centre.y + (centerRadius * 0.3f) * std::sin(angle);
-            float x2 = centre.x + (centerRadius * 0.95f) * std::cos(angle);
-            float y2 = centre.y + (centerRadius * 0.95f) * std::sin(angle);
-            g.drawLine(x1, y1, x2, y2, 0.5f);
+            float angle = i * juce::MathConstants<float>::pi / 18;
+            float x1 = centre.x + (centerRadius * 0.2f) * std::cos(angle);
+            float y1 = centre.y + (centerRadius * 0.2f) * std::sin(angle);
+            float x2 = centre.x + (centerRadius * 0.97f) * std::cos(angle);
+            float y2 = centre.y + (centerRadius * 0.97f) * std::sin(angle);
+            g.drawLine(x1, y1, x2, y2, 0.4f);
         }
 
-        // Draw highlight on metal center
-        g.setColour(juce::Colours::white.withAlpha(0.4f));
-        g.fillEllipse(centre.x - centerRadius * 0.3f, centre.y - centerRadius * 0.6f,
-                     centerRadius * 0.6f, centerRadius * 0.4f);
+        // Alternating darker texture lines
+        g.setColour(juce::Colour(0xff505050).withAlpha(0.2f));
+        for (int i = 0; i < 18; ++i)
+        {
+            float angle = (i * 2 + 1) * juce::MathConstants<float>::pi / 18;
+            float x1 = centre.x + (centerRadius * 0.2f) * std::cos(angle);
+            float y1 = centre.y + (centerRadius * 0.2f) * std::sin(angle);
+            float x2 = centre.x + (centerRadius * 0.97f) * std::cos(angle);
+            float y2 = centre.y + (centerRadius * 0.97f) * std::sin(angle);
+            g.drawLine(x1, y1, x2, y2, 0.6f);
+        }
 
-        // Draw orange position indicator line
+        // Specular highlight on metal center (stronger and more defined)
+        g.setColour(juce::Colours::white.withAlpha(0.55f));
+        g.fillEllipse(centre.x - centerRadius * 0.35f, centre.y - centerRadius * 0.7f,
+                     centerRadius * 0.7f, centerRadius * 0.45f);
+
+        // Secondary highlight
+        g.setColour(juce::Colours::white.withAlpha(0.25f));
+        g.fillEllipse(centre.x + centerRadius * 0.1f, centre.y - centerRadius * 0.5f,
+                     centerRadius * 0.4f, centerRadius * 0.3f);
+
+        // Bottom shadow for depth
+        g.setColour(juce::Colours::black.withAlpha(0.3f));
+        g.fillEllipse(centre.x - centerRadius * 0.3f, centre.y + centerRadius * 0.4f,
+                     centerRadius * 0.6f, centerRadius * 0.35f);
+
+        // Draw orange position indicator line (larger and more prominent)
         juce::Path indicator;
-        auto indicatorLength = centerRadius * 0.8f;
-        auto indicatorThickness = 3.5f;
+        auto indicatorLength = centerRadius * 0.85f;
+        auto indicatorThickness = 4.5f;
 
         indicator.addRectangle(-indicatorThickness / 2, -indicatorLength,
-                              indicatorThickness, indicatorLength * 0.7f);
+                              indicatorThickness, indicatorLength * 0.72f);
 
+        // Indicator shadow
+        g.setColour(juce::Colours::black.withAlpha(0.5f));
+        g.fillPath(indicator, juce::AffineTransform::rotation(toAngle)
+                                                     .translated(centre.x + 1, centre.y + 1));
+
+        // Main indicator
         g.setColour(juce::Colour(0xffff6600));
         g.fillPath(indicator, juce::AffineTransform::rotation(toAngle)
                                                      .translated(centre.x, centre.y));
 
-        // Add glow to indicator
-        g.setColour(juce::Colour(0xffff6600).withAlpha(0.3f));
+        // Multi-layer glow on indicator
+        g.setColour(juce::Colour(0xffff6600).withAlpha(0.4f));
         g.fillPath(indicator, juce::AffineTransform::rotation(toAngle)
-                                                     .scaled(1.3f, 1.3f)
+                                                     .scaled(1.25f, 1.25f)
+                                                     .translated(centre.x, centre.y));
+
+        g.setColour(juce::Colour(0xffff8800).withAlpha(0.2f));
+        g.fillPath(indicator, juce::AffineTransform::rotation(toAngle)
+                                                     .scaled(1.5f, 1.5f)
                                                      .translated(centre.x, centre.y));
     }
 };

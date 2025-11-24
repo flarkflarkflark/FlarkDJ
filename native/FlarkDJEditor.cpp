@@ -351,11 +351,11 @@ void FlarkDJEditor::resized()
     auto filterArea = topRow.removeFromLeft(sectionWidth).reduced(15, 15);
     filterArea.removeFromTop(25); // Title space
     filterEnabledButton.setBounds(filterArea.removeFromTop(25));
-    filterArea.removeFromTop(18);
-    filterCutoffSlider.setBounds(filterArea.removeFromTop(65));
-    filterArea.removeFromTop(18);
-    filterResonanceSlider.setBounds(filterArea.removeFromTop(65));
-    filterArea.removeFromTop(10);
+    filterArea.removeFromTop(12);
+    filterCutoffSlider.setBounds(filterArea.removeFromTop(75));
+    filterArea.removeFromTop(12);
+    filterResonanceSlider.setBounds(filterArea.removeFromTop(75));
+    filterArea.removeFromTop(8);
     filterTypeCombo.setBounds(filterArea.removeFromTop(22));
     topRow.removeFromLeft(spacing);
 
@@ -363,46 +363,46 @@ void FlarkDJEditor::resized()
     auto reverbArea = topRow.removeFromLeft(sectionWidth).reduced(15, 15);
     reverbArea.removeFromTop(25);
     reverbEnabledButton.setBounds(reverbArea.removeFromTop(25));
-    reverbArea.removeFromTop(18);
-    reverbRoomSizeSlider.setBounds(reverbArea.removeFromTop(50));
-    reverbArea.removeFromTop(18);
-    reverbDampingSlider.setBounds(reverbArea.removeFromTop(50));
-    reverbArea.removeFromTop(18);
-    reverbWetDrySlider.setBounds(reverbArea.removeFromTop(50));
+    reverbArea.removeFromTop(12);
+    reverbRoomSizeSlider.setBounds(reverbArea.removeFromTop(65));
+    reverbArea.removeFromTop(12);
+    reverbDampingSlider.setBounds(reverbArea.removeFromTop(65));
+    reverbArea.removeFromTop(12);
+    reverbWetDrySlider.setBounds(reverbArea.removeFromTop(65));
     topRow.removeFromLeft(spacing);
 
     // Delay section
     auto delayArea = topRow.removeFromLeft(sectionWidth).reduced(15, 15);
     delayArea.removeFromTop(25);
     delayEnabledButton.setBounds(delayArea.removeFromTop(25));
-    delayArea.removeFromTop(18);
-    delayTimeSlider.setBounds(delayArea.removeFromTop(50));
-    delayArea.removeFromTop(18);
-    delayFeedbackSlider.setBounds(delayArea.removeFromTop(50));
-    delayArea.removeFromTop(18);
-    delayWetDrySlider.setBounds(delayArea.removeFromTop(50));
+    delayArea.removeFromTop(12);
+    delayTimeSlider.setBounds(delayArea.removeFromTop(65));
+    delayArea.removeFromTop(12);
+    delayFeedbackSlider.setBounds(delayArea.removeFromTop(65));
+    delayArea.removeFromTop(12);
+    delayWetDrySlider.setBounds(delayArea.removeFromTop(65));
     topRow.removeFromLeft(spacing);
 
     // Flanger section
     auto flangerArea = topRow.removeFromLeft(sectionWidth).reduced(15, 15);
     flangerArea.removeFromTop(25);
     flangerEnabledButton.setBounds(flangerArea.removeFromTop(25));
-    flangerArea.removeFromTop(18);
-    flangerRateSlider.setBounds(flangerArea.removeFromTop(50));
-    flangerArea.removeFromTop(18);
-    flangerDepthSlider.setBounds(flangerArea.removeFromTop(50));
-    flangerArea.removeFromTop(18);
-    flangerFeedbackSlider.setBounds(flangerArea.removeFromTop(50));
+    flangerArea.removeFromTop(12);
+    flangerRateSlider.setBounds(flangerArea.removeFromTop(65));
+    flangerArea.removeFromTop(12);
+    flangerDepthSlider.setBounds(flangerArea.removeFromTop(65));
+    flangerArea.removeFromTop(12);
+    flangerFeedbackSlider.setBounds(flangerArea.removeFromTop(65));
     topRow.removeFromLeft(spacing);
 
     // LFO section
     auto lfoArea = topRow.removeFromLeft(sectionWidth).reduced(15, 15);
     lfoArea.removeFromTop(25);
     lfoArea.removeFromTop(5);
-    lfoRateSlider.setBounds(lfoArea.removeFromTop(70));
-    lfoArea.removeFromTop(18);
-    lfoDepthSlider.setBounds(lfoArea.removeFromTop(70));
-    lfoArea.removeFromTop(10);
+    lfoRateSlider.setBounds(lfoArea.removeFromTop(80));
+    lfoArea.removeFromTop(12);
+    lfoDepthSlider.setBounds(lfoArea.removeFromTop(80));
+    lfoArea.removeFromTop(8);
     lfoWaveformCombo.setBounds(lfoArea.removeFromTop(22));
 
     area.removeFromTop(spacing);

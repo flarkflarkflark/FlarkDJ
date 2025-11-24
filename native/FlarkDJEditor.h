@@ -223,14 +223,19 @@ public:
         g.fillAll(juce::Colour(0xff0d0d0d));
         auto bounds = getLocalBounds().reduced(2);
 
+        // Get real audio level from processor
+        float level = processor.getOutputLevel();
+        level = juce::jlimit(0.0f, 1.0f, level * 3.0f); // Scale up for visibility
+
         // Draw frequency spectrum bars
         const int numBars = 80;
         const float barWidth = bounds.getWidth() / (float)numBars;
 
         for (int i = 0; i < numBars; ++i)
         {
-            // Simulate spectrum with smooth random animation
-            float target = juce::Random::getSystemRandom().nextFloat() * 0.8f + 0.1f;
+            // Use real audio level with slight variation per bar for visual interest
+            float variation = 1.0f - (std::abs(i - numBars/2) / (float)numBars) * 0.3f;
+            float target = level * variation;
             float height = target * bounds.getHeight();
 
             // Color gradient from orange to yellow based on intensity

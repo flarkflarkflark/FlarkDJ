@@ -178,6 +178,16 @@ void FlarkDJProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Midi
             rightChannel[i] = rightInput[i] * (1.0f - mix) + rightChannel[i] * mix;
         }
     }
+
+    // Calculate RMS level for spectrum display
+    float rms = 0.0f;
+    for (int i = 0; i < numSamples; ++i)
+    {
+        float sample = (leftChannel[i] + rightChannel[i]) * 0.5f;
+        rms += sample * sample;
+    }
+    rms = std::sqrt(rms / numSamples);
+    outputLevel.store(rms);
 }
 
 void FlarkDJProcessor::processAudio(float* leftIn, float* rightIn,

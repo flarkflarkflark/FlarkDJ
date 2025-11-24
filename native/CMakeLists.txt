@@ -23,7 +23,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(JUCE)
 
 # Plugin formats to build
-set(FLARKDJ_FORMATS VST3 AU Standalone)
+set(FLARKDJ_FORMATS VST3 AU Standalone LV2 CLAP)
 
 # Optionally add AAX if SDK is available
 # if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/SDKs/AAX")
@@ -54,6 +54,12 @@ juce_add_plugin(FlarkDJ
 
     # AU settings
     AU_MAIN_TYPE kAudioUnitType_Effect
+
+    # LV2 settings
+    LV2URI https://flarkdj.com/plugins/flarkdj
+
+    # CLAP settings
+    CLAP_ID com.flarkdj.flarkdj
 
     # Copy plugin to system folders after build (optional)
     COPY_PLUGIN_AFTER_BUILD TRUE

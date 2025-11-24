@@ -209,7 +209,86 @@ public:
 };
 
 //==============================================================================
-class FlarkDJEditor : public juce::AudioProcessorEditor
+// XY Pad Component for parameter control
+class XYPad : public juce::Component
+{
+public:
+    XYPad()
+    {
+        setOpaque(false);
+    }
+
+    void paint(juce::Graphics& g) override
+    {
+        auto bounds = getLocalBounds().toFloat().reduced(2);
+
+        // Background
+        g.setColour(juce::Colour(0xff0a0a0a));
+        g.fillRoundedRectangle(bounds, 5);
+
+        // Border
+        g.setColour(juce::Colour(0xffff6600).withAlpha(0.6f));
+        g.drawRoundedRectangle(bounds, 5, 2);
+
+        // Crosshair guides
+        g.setColour(juce::Colour(0xff333333));
+        g.drawLine(0, getHeight() / 2, getWidth(), getHeight() / 2, 1);
+        g.drawLine(getWidth() / 2, 0, getWidth() / 2, getHeight(), 1);
+
+        // Position indicator
+        auto x = xValue * getWidth();
+        auto y = (1.0f - yValue) * getHeight();
+
+        // Glow
+        g.setColour(juce::Colour(0xffff6600).withAlpha(0.3f));
+        g.fillEllipse(x - 20, y - 20, 40, 40);
+
+        // Main dot
+        g.setColour(juce::Colour(0xffff6600));
+        g.fillEllipse(x - 8, y - 8, 16, 16);
+
+        // Dot highlight
+        g.setColour(juce::Colours::white.withAlpha(0.6f));
+        g.fillEllipse(x - 3, y - 5, 6, 6);
+    }
+
+    void mouseDown(const juce::MouseEvent& e) override
+    {
+        updatePosition(e);
+    }
+
+    void mouseDrag(const juce::MouseEvent& e) override
+    {
+        updatePosition(e);
+    }
+
+    void updatePosition(const juce::MouseEvent& e)
+    {
+        xValue = juce::jlimit(0.0f, 1.0f, e.position.x / getWidth());
+        yValue = juce::jlimit(0.0f, 1.0f, 1.0f - (e.position.y / getHeight()));
+        repaint();
+
+        if (onValueChange)
+            onValueChange(xValue, yValue);
+    }
+
+    void setXY(float x, float y)
+    {
+        xValue = juce::jlimit(0.0f, 1.0f, x);
+        yValue = juce::jlimit(0.0f, 1.0f, y);
+        repaint();
+    }
+
+    std::function<void(float, float)> onValueChange;
+
+private:
+    float xValue = 0.5f;
+    float yValue = 0.5f;
+};
+
+//==============================================================================
+class FlarkDJEditor : public juce::AudioProcessorEditor,
+                      private juce::Timer
 {
 public:
     FlarkDJEditor(FlarkDJProcessor&);
@@ -218,6 +297,7 @@ public:
     //==============================================================================
     void paint(juce::Graphics&) override;
     void resized() override;
+    void timerCallback() override;
 
 private:
     FlarkDJProcessor& audioProcessor;
@@ -268,6 +348,26 @@ private:
     juce::ComboBox lfoSyncRateCombo;
 
     //==============================================================================
+    // Preset Manager
+    juce::ComboBox presetCombo;
+    juce::TextButton savePresetButton;
+    juce::TextButton loadPresetButton;
+    juce::TextButton deletePresetButton;
+
+    // Snapshot System (A/B comparison)
+    juce::TextButton snapshotAButton;
+    juce::TextButton snapshotBButton;
+    juce::TextButton copyABButton;
+    juce::MemoryBlock snapshotA;
+    juce::MemoryBlock snapshotB;
+    bool usingSnapshotA = true;
+
+    // XY Pad
+    XYPad xyPad;
+    juce::ComboBox xyPadXParam;
+    juce::ComboBox xyPadYParam;
+
+    //==============================================================================
     // Labels
     std::vector<std::unique_ptr<juce::Label>> labels;
 
@@ -312,6 +412,25 @@ private:
     void setupButton(juce::ToggleButton& button);
     void setupComboBox(juce::ComboBox& combo);
     juce::Label* createLabel(const juce::String& text, juce::Component& attachTo);
+
+    //==============================================================================
+    // Preset management methods
+    void loadPresetList();
+    void savePreset();
+    void loadPreset(const juce::String& presetName);
+    void deletePreset();
+    juce::File getPresetDirectory();
+
+    // Snapshot methods
+    void captureSnapshot(juce::MemoryBlock& snapshot);
+    void restoreSnapshot(const juce::MemoryBlock& snapshot);
+    void switchToSnapshotA();
+    void switchToSnapshotB();
+    void copyAToB();
+
+    // XY Pad methods
+    void updateXYPadMapping();
+    juce::RangedAudioParameter* getParameterByName(const juce::String& paramName);
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FlarkDJEditor)

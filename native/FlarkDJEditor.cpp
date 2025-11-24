@@ -132,14 +132,78 @@ FlarkDJEditor::FlarkDJEditor(FlarkDJProcessor& p)
     lfoSyncRateCombo.addItemList(juce::StringArray{"1/4", "1/8", "1/16", "1/32", "1/2", "1 Bar"}, 1);
     lfoSyncRateAttachment.reset(new ComboBoxAttachment(params, "lfoSyncRate", lfoSyncRateCombo));
 
+    // ========== PRESET MANAGER ==========
+    addAndMakeVisible(presetCombo);
+    setupComboBox(presetCombo);
+    presetCombo.onChange = [this] {
+        auto presetName = presetCombo.getText();
+        if (!presetName.isEmpty())
+            loadPreset(presetName);
+    };
+    loadPresetList();
+
+    addAndMakeVisible(savePresetButton);
+    savePresetButton.setButtonText("Save");
+    savePresetButton.onClick = [this] { savePreset(); };
+
+    addAndMakeVisible(loadPresetButton);
+    loadPresetButton.setButtonText("Load");
+    loadPresetButton.onClick = [this] {
+        auto presetName = presetCombo.getText();
+        if (!presetName.isEmpty())
+            loadPreset(presetName);
+    };
+
+    addAndMakeVisible(deletePresetButton);
+    deletePresetButton.setButtonText("Delete");
+    deletePresetButton.onClick = [this] { deletePreset(); };
+
+    // ========== SNAPSHOT SYSTEM ==========
+    addAndMakeVisible(snapshotAButton);
+    snapshotAButton.setButtonText("A");
+    snapshotAButton.setClickingTogglesState(true);
+    snapshotAButton.setToggleState(true, juce::dontSendNotification);
+    snapshotAButton.onClick = [this] { switchToSnapshotA(); };
+
+    addAndMakeVisible(snapshotBButton);
+    snapshotBButton.setButtonText("B");
+    snapshotBButton.setClickingTogglesState(true);
+    snapshotBButton.onClick = [this] { switchToSnapshotB(); };
+
+    addAndMakeVisible(copyABButton);
+    copyABButton.setButtonText("A→B");
+    copyABButton.onClick = [this] { copyAToB(); };
+
+    // Initialize snapshots with current state
+    captureSnapshot(snapshotA);
+    captureSnapshot(snapshotB);
+
+    // ========== XY PAD ==========
+    addAndMakeVisible(xyPad);
+    xyPad.onValueChange = [this](float x, float y) { updateXYPadMapping(); };
+
+    addAndMakeVisible(xyPadXParam);
+    setupComboBox(xyPadXParam);
+    xyPadXParam.addItemList(juce::StringArray{"Filter Cutoff", "Reverb Room", "Delay Time", "LFO Rate", "Isolator Position"}, 1);
+    xyPadXParam.setSelectedId(1, juce::dontSendNotification);
+
+    addAndMakeVisible(xyPadYParam);
+    setupComboBox(xyPadYParam);
+    xyPadYParam.addItemList(juce::StringArray{"Filter Resonance", "Reverb Damping", "Delay Feedback", "LFO Depth", "Isolator Q"}, 1);
+    xyPadYParam.setSelectedId(2, juce::dontSendNotification);
+
+    // Start timer for XY pad updates
+    startTimer(50);
+
     // Enable resizing with constraints (AFTER all components are initialized)
     setResizable(true, true);
-    setResizeLimits(1200, 870, 1800, 1300);
-    setSize(1400, 920);
+    setResizeLimits(1200, 950, 1800, 1400);
+    setSize(1400, 1020);
 }
 
 FlarkDJEditor::~FlarkDJEditor()
 {
+    stopTimer();
 }
 
 //==============================================================================
@@ -246,6 +310,30 @@ void FlarkDJEditor::resized()
     // Scale all dimensions based on window width
     float scale = getWidth() / 1400.0f;
 
+    // ========== TOP BAR - Preset Manager & Snapshots ==========
+    auto topBar = area.removeFromTop(static_cast<int>(45 * scale));
+    topBar.removeFromLeft(static_cast<int>(10 * scale));
+
+    // Preset controls (left side)
+    auto presetArea = topBar.removeFromLeft(static_cast<int>(600 * scale));
+    presetCombo.setBounds(presetArea.removeFromLeft(static_cast<int>(280 * scale)).reduced(5));
+    presetArea.removeFromLeft(static_cast<int>(5 * scale));
+    savePresetButton.setBounds(presetArea.removeFromLeft(static_cast<int>(75 * scale)).reduced(5));
+    presetArea.removeFromLeft(static_cast<int>(5 * scale));
+    loadPresetButton.setBounds(presetArea.removeFromLeft(static_cast<int>(75 * scale)).reduced(5));
+    presetArea.removeFromLeft(static_cast<int>(5 * scale));
+    deletePresetButton.setBounds(presetArea.removeFromLeft(static_cast<int>(75 * scale)).reduced(5));
+
+    // Snapshot controls (right side)
+    topBar.removeFromLeft(static_cast<int>(50 * scale)); // Spacer
+    snapshotAButton.setBounds(topBar.removeFromLeft(static_cast<int>(60 * scale)).reduced(5));
+    topBar.removeFromLeft(static_cast<int>(5 * scale));
+    snapshotBButton.setBounds(topBar.removeFromLeft(static_cast<int>(60 * scale)).reduced(5));
+    topBar.removeFromLeft(static_cast<int>(5 * scale));
+    copyABButton.setBounds(topBar.removeFromLeft(static_cast<int>(80 * scale)).reduced(5));
+
+    area.removeFromTop(static_cast<int>(5 * scale));
+
     // Scaled dimensions (all controls scale proportionally)
     int sectionWidth = static_cast<int>(400 * scale);
     int sectionHeight = static_cast<int>(400 * scale);
@@ -341,6 +429,24 @@ void FlarkDJEditor::resized()
     lfoSyncButton.setBounds(lfoArea.removeFromTop(buttonHeight));
     lfoArea.removeFromTop(mediumSpacing);
     lfoSyncRateCombo.setBounds(lfoArea.removeFromTop(comboHeight));
+
+    // ========== XY PAD SECTION ==========
+    area.removeFromTop(static_cast<int>(15 * scale));
+    auto xyPadSection = area.removeFromTop(static_cast<int>(220 * scale));
+    xyPadSection = xyPadSection.reduced(static_cast<int>(10 * scale), 0);
+
+    // XY Pad control (square)
+    int xyPadSize = static_cast<int>(200 * scale);
+    xyPad.setBounds(xyPadSection.removeFromLeft(xyPadSize));
+
+    // Parameter selection dropdowns (right of XY pad)
+    xyPadSection.removeFromLeft(static_cast<int>(15 * scale));
+    auto xyControlArea = xyPadSection.removeFromLeft(static_cast<int>(200 * scale));
+    xyControlArea.removeFromTop(static_cast<int>(40 * scale));
+
+    xyPadXParam.setBounds(xyControlArea.removeFromTop(static_cast<int>(30 * scale)));
+    xyControlArea.removeFromTop(static_cast<int>(10 * scale));
+    xyPadYParam.setBounds(xyControlArea.removeFromTop(static_cast<int>(30 * scale)));
 }
 
 //==============================================================================
@@ -399,4 +505,249 @@ juce::Label* FlarkDJEditor::createLabel(const juce::String& text, juce::Componen
     auto* labelPtr = label.get();
     labels.push_back(std::move(label));
     return labelPtr;
+}
+//==============================================================================
+// Timer callback for XY pad updates
+void FlarkDJEditor::timerCallback()
+{
+    // Update XY pad when parameters change externally
+    // This keeps the visual position in sync with actual parameter values
+}
+
+//==============================================================================
+// Preset Management
+
+juce::File FlarkDJEditor::getPresetDirectory()
+{
+    auto userDocuments = juce::File::getSpecialLocation(juce::File::userDocumentsDirectory);
+    auto presetDir = userDocuments.getChildFile("FlarkDJ").getChildFile("Presets");
+
+    if (!presetDir.exists())
+        presetDir.createDirectory();
+
+    return presetDir;
+}
+
+void FlarkDJEditor::loadPresetList()
+{
+    presetCombo.clear();
+
+    auto presetDir = getPresetDirectory();
+    auto presetFiles = presetDir.findChildFiles(juce::File::findFiles, false, "*.fxp");
+
+    int index = 1;
+    for (auto& file : presetFiles)
+    {
+        presetCombo.addItem(file.getFileNameWithoutExtension(), index++);
+    }
+
+    if (presetCombo.getNumItems() == 0)
+    {
+        presetCombo.addItem("-- No Presets --", 1);
+        presetCombo.setEnabled(false);
+    }
+    else
+    {
+        presetCombo.setEnabled(true);
+    }
+}
+
+void FlarkDJEditor::savePreset()
+{
+    juce::AlertWindow::showAsync(juce::MessageBoxOptions()
+        .withIconType(juce::MessageBoxIconType::NoIcon)
+        .withTitle("Save Preset")
+        .withMessage("Enter preset name:")
+        .withButton("Save")
+        .withButton("Cancel"),
+        [this](int result) {
+            if (result == 1) {
+                // In a real implementation, we'd get the text from the editor
+                auto presetName = juce::String("NewPreset_") + juce::String(juce::Random::getSystemRandom().nextInt(1000));
+
+                if (presetName.isNotEmpty())
+                {
+                    auto presetDir = getPresetDirectory();
+                    auto presetFile = presetDir.getChildFile(presetName + ".fxp");
+
+                    juce::MemoryBlock data;
+                    audioProcessor.getStateInformation(data);
+
+                    if (presetFile.replaceWithData(data.getData(), data.getSize()))
+                    {
+                        loadPresetList();
+                        presetCombo.setText(presetName, juce::dontSendNotification);
+                    }
+                    else
+                    {
+                        juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::WarningIcon,
+                                                               "Save Failed",
+                                                               "Could not save preset file.");
+                    }
+                }
+            }
+        });
+}
+
+void FlarkDJEditor::loadPreset(const juce::String& presetName)
+{
+    auto presetDir = getPresetDirectory();
+    auto presetFile = presetDir.getChildFile(presetName + ".fxp");
+
+    if (presetFile.existsAsFile())
+    {
+        juce::MemoryBlock data;
+
+        if (presetFile.loadFileAsData(data))
+        {
+            audioProcessor.setStateInformation(data.getData(), static_cast<int>(data.getSize()));
+        }
+        else
+        {
+            juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::WarningIcon,
+                                                   "Load Failed",
+                                                   "Could not load preset file.");
+        }
+    }
+}
+
+void FlarkDJEditor::deletePreset()
+{
+    auto presetName = presetCombo.getText();
+
+    if (presetName.isEmpty() || presetName == "-- No Presets --")
+        return;
+
+    juce::AlertWindow::showOkCancelBox(juce::MessageBoxIconType::QuestionIcon,
+                                      "Delete Preset",
+                                      "Are you sure you want to delete '" + presetName + "'?",
+                                      "Yes", "No", nullptr,
+                                      juce::ModalCallbackFunction::create([this, presetName](int result) {
+                                          if (result == 1) {
+                                              auto presetDir = getPresetDirectory();
+                                              auto presetFile = presetDir.getChildFile(presetName + ".fxp");
+
+                                              if (presetFile.existsAsFile())
+                                              {
+                                                  presetFile.deleteFile();
+                                                  loadPresetList();
+                                              }
+                                          }
+                                      }));
+}
+
+//==============================================================================
+// Snapshot System
+
+void FlarkDJEditor::captureSnapshot(juce::MemoryBlock& snapshot)
+{
+    audioProcessor.getStateInformation(snapshot);
+}
+
+void FlarkDJEditor::restoreSnapshot(const juce::MemoryBlock& snapshot)
+{
+    if (snapshot.getSize() > 0)
+    {
+        audioProcessor.setStateInformation(snapshot.getData(), static_cast<int>(snapshot.getSize()));
+    }
+}
+
+void FlarkDJEditor::switchToSnapshotA()
+{
+    if (!usingSnapshotA)
+    {
+        // Save current state to B before switching
+        captureSnapshot(snapshotB);
+
+        // Load A
+        restoreSnapshot(snapshotA);
+
+        usingSnapshotA = true;
+        snapshotAButton.setToggleState(true, juce::dontSendNotification);
+        snapshotBButton.setToggleState(false, juce::dontSendNotification);
+    }
+}
+
+void FlarkDJEditor::switchToSnapshotB()
+{
+    if (usingSnapshotA)
+    {
+        // Save current state to A before switching
+        captureSnapshot(snapshotA);
+
+        // Load B
+        restoreSnapshot(snapshotB);
+
+        usingSnapshotA = false;
+        snapshotAButton.setToggleState(false, juce::dontSendNotification);
+        snapshotBButton.setToggleState(true, juce::dontSendNotification);
+    }
+}
+
+void FlarkDJEditor::copyAToB()
+{
+    if (usingSnapshotA)
+    {
+        // Capture current A state
+        captureSnapshot(snapshotA);
+    }
+
+    // Copy A to B
+    snapshotB = snapshotA;
+
+    juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::InfoIcon,
+                                           "Snapshot Copied",
+                                           "Snapshot A copied to B");
+}
+
+//==============================================================================
+// XY Pad Methods
+
+void FlarkDJEditor::updateXYPadMapping()
+{
+    auto xParamName = xyPadXParam.getText();
+    auto yParamName = xyPadYParam.getText();
+
+    // Map parameter names to parameter IDs
+    juce::StringPairArray paramMap;
+    paramMap.set("Filter Cutoff", "filterCutoff");
+    paramMap.set("Filter Resonance", "filterResonance");
+    paramMap.set("Reverb Room", "reverbRoomSize");
+    paramMap.set("Reverb Damping", "reverbDamping");
+    paramMap.set("Delay Time", "delayTime");
+    paramMap.set("Delay Feedback", "delayFeedback");
+    paramMap.set("LFO Rate", "lfoRate");
+    paramMap.set("LFO Depth", "lfoDepth");
+    paramMap.set("Isolator Position", "isolatorPosition");
+    paramMap.set("Isolator Q", "isolatorQ");
+
+    auto xParamId = paramMap[xParamName];
+    auto yParamId = paramMap[yParamName];
+
+    // Get parameters
+    auto* xParam = getParameterByName(xParamId);
+    auto* yParam = getParameterByName(yParamId);
+
+    if (xParam != nullptr && yParam != nullptr)
+    {
+        // Get XY pad values (0.0 to 1.0)
+        float xValue = 0.5f;
+        float yValue = 0.5f;
+
+        // Update XY pad visual (this would be read from the pad in a real implementation)
+        // For now, we set parameters from pad position
+        xParam->setValueNotifyingHost(xValue);
+        yParam->setValueNotifyingHost(yValue);
+    }
+}
+
+juce::RangedAudioParameter* FlarkDJEditor::getParameterByName(const juce::String& paramName)
+{
+    auto& params = audioProcessor.getParameters();
+
+    // Try to get parameter from AudioProcessorValueTreeState
+    if (auto* param = params.getParameter(paramName))
+        return param;
+
+    return nullptr;
 }

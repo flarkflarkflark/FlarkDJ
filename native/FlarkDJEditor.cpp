@@ -401,11 +401,19 @@ void FlarkDJEditor::setupSlider(juce::Slider& slider, juce::Slider::SliderStyle 
     slider.setSliderStyle(style);
     slider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 70, 18);
 
-    // Professional orange-on-black color scheme
-    slider.setColour(juce::Slider::thumbColourId, juce::Colour(0xffff6600));
-    slider.setColour(juce::Slider::trackColourId, juce::Colour(0xffff6600).withAlpha(0.6f));
-    slider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(0xffff6600));
-    slider.setColour(juce::Slider::rotarySliderOutlineColourId, juce::Colour(0xff3a3a3a));
+    // Apply DJ knob look and feel for rotary sliders only
+    if (style == juce::Slider::Rotary)
+    {
+        slider.setLookAndFeel(&djKnobLookAndFeel);
+    }
+    else
+    {
+        // Linear sliders use default styling
+        slider.setColour(juce::Slider::thumbColourId, juce::Colour(0xffff6600));
+        slider.setColour(juce::Slider::trackColourId, juce::Colour(0xffff6600).withAlpha(0.6f));
+    }
+
+    // Text box colors for all sliders
     slider.setColour(juce::Slider::textBoxTextColourId, juce::Colours::white);
     slider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0xff1a1a1a));
     slider.setColour(juce::Slider::textBoxOutlineColourId, juce::Colour(0xff3a3a3a));

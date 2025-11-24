@@ -16,6 +16,119 @@
  */
 
 //==============================================================================
+// Custom DJ-style knob look and feel
+class DJKnobLookAndFeel : public juce::LookAndFeel_V4
+{
+public:
+    DJKnobLookAndFeel()
+    {
+        setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(0xffff6600));
+        setColour(juce::Slider::rotarySliderOutlineColourId, juce::Colour(0xff2a2a2a));
+        setColour(juce::Slider::thumbColourId, juce::Colour(0xffff6600));
+    }
+
+    void drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height,
+                         float sliderPos, float rotaryStartAngle, float rotaryEndAngle,
+                         juce::Slider& slider) override
+    {
+        auto bounds = juce::Rectangle<int>(x, y, width, height).toFloat().reduced(10);
+        auto radius = juce::jmin(bounds.getWidth(), bounds.getHeight()) / 2.0f;
+        auto toAngle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
+        auto centre = bounds.getCentre();
+
+        // Draw faceted outer ring (8 segments like DJ knob)
+        const int numFacets = 8;
+        juce::Path facetedRing;
+
+        for (int i = 0; i < numFacets; ++i)
+        {
+            float angle1 = (i * juce::MathConstants<float>::twoPi / numFacets) - juce::MathConstants<float>::pi / 2;
+            float angle2 = ((i + 1) * juce::MathConstants<float>::twoPi / numFacets) - juce::MathConstants<float>::pi / 2;
+
+            float x1 = centre.x + radius * std::cos(angle1);
+            float y1 = centre.y + radius * std::sin(angle1);
+            float x2 = centre.x + radius * std::cos(angle2);
+            float y2 = centre.y + radius * std::sin(angle2);
+
+            float innerRadius = radius * 0.7f;
+            float x3 = centre.x + innerRadius * std::cos(angle2);
+            float y3 = centre.y + innerRadius * std::sin(angle2);
+            float x4 = centre.x + innerRadius * std::cos(angle1);
+            float y4 = centre.y + innerRadius * std::sin(angle1);
+
+            if (i == 0)
+                facetedRing.startNewSubPath(x1, y1);
+            else
+                facetedRing.lineTo(x1, y1);
+
+            facetedRing.lineTo(x2, y2);
+            facetedRing.lineTo(x3, y3);
+            facetedRing.lineTo(x4, y4);
+            facetedRing.closeSubPath();
+        }
+
+        // Draw black faceted ring with gradient
+        juce::ColourGradient ringGradient(
+            juce::Colour(0xff1a1a1a), centre.x - radius, centre.y - radius,
+            juce::Colour(0xff000000), centre.x + radius, centre.y + radius,
+            false);
+        g.setGradientFill(ringGradient);
+        g.fillPath(facetedRing);
+
+        // Draw inner shadow on facets
+        g.setColour(juce::Colours::black.withAlpha(0.5f));
+        g.strokePath(facetedRing, juce::PathStrokeType(1.0f));
+
+        // Draw brushed metal center cap
+        auto centerRadius = radius * 0.65f;
+
+        // Radial gradient for metallic look
+        juce::ColourGradient metalGradient(
+            juce::Colour(0xff999999), centre.x, centre.y - centerRadius,
+            juce::Colour(0xff555555), centre.x, centre.y + centerRadius,
+            false);
+        g.setGradientFill(metalGradient);
+        g.fillEllipse(centre.x - centerRadius, centre.y - centerRadius,
+                     centerRadius * 2, centerRadius * 2);
+
+        // Draw brushed texture lines
+        g.setColour(juce::Colour(0xff777777).withAlpha(0.3f));
+        for (int i = 0; i < 20; ++i)
+        {
+            float angle = i * juce::MathConstants<float>::pi / 10;
+            float x1 = centre.x + (centerRadius * 0.3f) * std::cos(angle);
+            float y1 = centre.y + (centerRadius * 0.3f) * std::sin(angle);
+            float x2 = centre.x + (centerRadius * 0.95f) * std::cos(angle);
+            float y2 = centre.y + (centerRadius * 0.95f) * std::sin(angle);
+            g.drawLine(x1, y1, x2, y2, 0.5f);
+        }
+
+        // Draw highlight on metal center
+        g.setColour(juce::Colours::white.withAlpha(0.4f));
+        g.fillEllipse(centre.x - centerRadius * 0.3f, centre.y - centerRadius * 0.6f,
+                     centerRadius * 0.6f, centerRadius * 0.4f);
+
+        // Draw orange position indicator line
+        juce::Path indicator;
+        auto indicatorLength = centerRadius * 0.8f;
+        auto indicatorThickness = 3.5f;
+
+        indicator.addRectangle(-indicatorThickness / 2, -indicatorLength,
+                              indicatorThickness, indicatorLength * 0.7f);
+
+        g.setColour(juce::Colour(0xffff6600));
+        g.fillPath(indicator, juce::AffineTransform::rotation(toAngle)
+                                                     .translated(centre.x, centre.y));
+
+        // Add glow to indicator
+        g.setColour(juce::Colour(0xffff6600).withAlpha(0.3f));
+        g.fillPath(indicator, juce::AffineTransform::rotation(toAngle)
+                                                     .scaled(1.3f, 1.3f)
+                                                     .translated(centre.x, centre.y));
+    }
+};
+
+//==============================================================================
 // Real-time spectrum analyzer component
 class SpectrumAnalyzer : public juce::Component, public juce::Timer
 {
@@ -151,6 +264,10 @@ public:
 
 private:
     FlarkDJProcessor& audioProcessor;
+
+    //==============================================================================
+    // Custom look and feel for DJ-style knobs
+    DJKnobLookAndFeel djKnobLookAndFeel;
 
     //==============================================================================
     // Visual components

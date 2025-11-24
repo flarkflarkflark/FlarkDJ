@@ -22,7 +22,7 @@ FlarkDJProcessor::FlarkDJProcessor()
                     std::make_unique<juce::AudioParameterFloat>("reverbDamping", "Reverb Damping",
                         0.0f, 1.0f, 0.5f),
                     std::make_unique<juce::AudioParameterFloat>("reverbWetDry", "Reverb Wet/Dry",
-                        0.0f, 1.0f, 0.3f),
+                        0.0f, 1.0f, 0.6f),
 
                     std::make_unique<juce::AudioParameterBool>("delayEnabled", "Delay Enabled", false),
                     std::make_unique<juce::AudioParameterFloat>("delayTime", "Delay Time",
@@ -49,7 +49,7 @@ FlarkDJProcessor::FlarkDJProcessor()
                     std::make_unique<juce::AudioParameterFloat>("lfoRate", "LFO Rate",
                         juce::NormalisableRange<float>(0.1f, 20.0f, 0.1f, 0.5f), 1.0f),
                     std::make_unique<juce::AudioParameterFloat>("lfoDepth", "LFO Depth",
-                        0.0f, 1.0f, 0.0f),
+                        0.0f, 1.0f, 0.3f),
                     std::make_unique<juce::AudioParameterChoice>("lfoWaveform", "LFO Waveform",
                         juce::StringArray{"Sine", "Square", "Triangle", "Sawtooth"}, 0),
 

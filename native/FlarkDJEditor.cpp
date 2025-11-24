@@ -10,10 +10,6 @@ FlarkDJEditor::FlarkDJEditor(FlarkDJProcessor& p)
     spectrumAnalyzer = std::make_unique<SpectrumAnalyzer>(audioProcessor);
     addAndMakeVisible(*spectrumAnalyzer);
 
-    // Create XY Pad
-    xyPad = std::make_unique<XYPad>();
-    addAndMakeVisible(*xyPad);
-
     // ========== FILTER SECTION ==========
     addAndMakeVisible(filterEnabledButton);
     setupButton(filterEnabledButton);
@@ -34,17 +30,6 @@ FlarkDJEditor::FlarkDJEditor(FlarkDJProcessor& p)
     setupComboBox(filterTypeCombo);
     filterTypeCombo.addItemList(juce::StringArray{"Lowpass", "Highpass", "Bandpass"}, 1);
     filterTypeAttachment.reset(new ComboBoxAttachment(params, "filterType", filterTypeCombo));
-
-    // Sidechain controls
-    addAndMakeVisible(sidechainEnabledButton);
-    setupButton(sidechainEnabledButton);
-    sidechainEnabledButton.setButtonText("Sidechain");
-    sidechainEnabledAttachment.reset(new ButtonAttachment(params, "sidechainEnabled", sidechainEnabledButton));
-
-    addAndMakeVisible(sidechainThresholdSlider);
-    setupSlider(sidechainThresholdSlider, juce::Slider::LinearHorizontal);
-    sidechainThresholdAttachment.reset(new SliderAttachment(params, "sidechainThreshold", sidechainThresholdSlider));
-    createLabel("SC Threshold", sidechainThresholdSlider);
 
     // ========== REVERB SECTION ==========
     addAndMakeVisible(reverbEnabledButton);
@@ -125,29 +110,7 @@ FlarkDJEditor::FlarkDJEditor(FlarkDJProcessor& p)
     lfoWaveformCombo.addItemList(juce::StringArray{"Sine", "Square", "Triangle", "Sawtooth"}, 1);
     lfoWaveformAttachment.reset(new ComboBoxAttachment(params, "lfoWaveform", lfoWaveformCombo));
 
-    // ========== MACRO SECTION ==========
-    addAndMakeVisible(macro1Slider);
-    setupSlider(macro1Slider);
-    createLabel("Macro 1", macro1Slider);
-
-    addAndMakeVisible(macro2Slider);
-    setupSlider(macro2Slider);
-    createLabel("Macro 2", macro2Slider);
-
-    addAndMakeVisible(macro3Slider);
-    setupSlider(macro3Slider);
-    createLabel("Macro 3", macro3Slider);
-
-    addAndMakeVisible(macro4Slider);
-    setupSlider(macro4Slider);
-    createLabel("Macro 4", macro4Slider);
-
     // ========== MASTER SECTION ==========
-    addAndMakeVisible(masterMixSlider);
-    setupSlider(masterMixSlider, juce::Slider::LinearHorizontal);
-    masterMixAttachment.reset(new SliderAttachment(params, "masterMix", masterMixSlider));
-    createLabel("Mix", masterMixSlider);
-
     addAndMakeVisible(masterBypassButton);
     setupButton(masterBypassButton);
     masterBypassButton.setButtonText("Bypass");
@@ -237,13 +200,8 @@ void FlarkDJEditor::paint(juce::Graphics& g)
         g.drawRect(xPos + i * (sectionWidth + spacing), yPos, sectionWidth, sectionHeight, 3);
     }
 
-    // Middle row - Macros and XY Pad
-    yPos += sectionHeight + spacing;
-    g.drawRect(xPos, yPos, sectionWidth * 2 + spacing, visualHeight, 3);
-    g.drawRect(xPos + sectionWidth * 2 + spacing * 2, yPos, sectionWidth * 3 + spacing * 2, visualHeight, 3);
-
     // Bottom row - Master + Spectrum
-    yPos += visualHeight + spacing;
+    yPos += sectionHeight + spacing;
     int masterWidth = static_cast<int>((getWidth() - 20));
     g.drawRect(xPos, yPos, masterWidth, 150, 3);
 
@@ -265,15 +223,8 @@ void FlarkDJEditor::paint(juce::Graphics& g)
         g.drawText(titles[i], titleX, yPos, sectionWidth, 20, juce::Justification::centred);
     }
 
-    // Macros and Spectrum titles
-    yPos += sectionHeight + spacing;
-    g.setColour(orangeGlow.withAlpha(0.4f));
-    g.drawText("MACROS", xPos, yPos, sectionWidth * 2 + spacing, 20, juce::Justification::centred);
-    g.setColour(juce::Colours::white);
-    g.drawText("MACROS", xPos, yPos, sectionWidth * 2 + spacing, 20, juce::Justification::centred);
-
     // Master title
-    yPos += visualHeight + spacing;
+    yPos += sectionHeight + spacing;
     g.setColour(orangeGlow.withAlpha(0.4f));
     g.drawText("MASTER & SPECTRUM ANALYZER", xPos, yPos, masterWidth, 20, juce::Justification::centred);
     g.setColour(juce::Colours::white);
@@ -354,47 +305,17 @@ void FlarkDJEditor::resized()
 
     area.removeFromTop(spacing);
 
-    // ========== MIDDLE ROW - MACROS & XY PAD ==========
-    auto middleRow = area.removeFromTop(visualHeight);
-
-    // Macros section (4 knobs)
-    auto macroArea = middleRow.removeFromLeft(sectionWidth * 2 + spacing).reduced(15, 15);
-    macroArea.removeFromTop(25);
-    int macroKnobSize = (macroArea.getWidth() - 30) / 4;
-    auto macroRow = macroArea.removeFromTop(macroKnobSize + 30);
-    macro1Slider.setBounds(macroRow.removeFromLeft(macroKnobSize));
-    macroRow.removeFromLeft(10);
-    macro2Slider.setBounds(macroRow.removeFromLeft(macroKnobSize));
-    macroRow.removeFromLeft(10);
-    macro3Slider.setBounds(macroRow.removeFromLeft(macroKnobSize));
-    macroRow.removeFromLeft(10);
-    macro4Slider.setBounds(macroRow.removeFromLeft(macroKnobSize));
-    middleRow.removeFromLeft(spacing);
-
-    // XY Pad section
-    auto xyPadArea = middleRow.removeFromLeft(sectionWidth * 3 + spacing * 2).reduced(15, 15);
-    xyPadArea.removeFromTop(25);
-    xyPad->setBounds(xyPadArea);
-
-    area.removeFromTop(spacing);
-
     // ========== BOTTOM ROW - MASTER & SPECTRUM ==========
     auto masterArea = area.removeFromTop(150).reduced(15, 15);
     masterArea.removeFromTop(25);
 
-    // Bypass and Mix at left side
-    auto controlsArea = masterArea.removeFromLeft(300);
+    // Bypass button at left side
+    auto controlsArea = masterArea.removeFromLeft(120);
     masterBypassButton.setBounds(controlsArea.removeFromTop(30));
-    controlsArea.removeFromTop(10);
-    masterMixSlider.setBounds(controlsArea.removeFromTop(40));
 
     // Spectrum analyzer takes remaining space
     masterArea.removeFromLeft(10);
     spectrumAnalyzer->setBounds(masterArea);
-
-    // Sidechain controls positioned over filter section (overlay)
-    sidechainEnabledButton.setBounds(10 + 15, 93 + 25 + 180, 80, 20);
-    sidechainThresholdSlider.setBounds(10 + 100, 93 + 25 + 180, 105, 20);
 }
 
 //==============================================================================

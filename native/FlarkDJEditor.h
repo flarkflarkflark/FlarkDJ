@@ -270,73 +270,6 @@ private:
 };
 
 //==============================================================================
-// XY Pad for multi-parameter control
-class XYPad : public juce::Component
-{
-public:
-    XYPad()
-    {
-        x = 0.5f;
-        y = 0.5f;
-    }
-
-    void paint(juce::Graphics& g) override
-    {
-        auto bounds = getLocalBounds().reduced(2);
-
-        // Background
-        g.setColour(juce::Colour(0xff0d0d0d));
-        g.fillRect(bounds);
-
-        // Grid
-        g.setColour(juce::Colour(0xff3a3a3a).withAlpha(0.3f));
-        for (int i = 1; i < 4; ++i)
-        {
-            float pos = i / 4.0f;
-            g.drawHorizontalLine(bounds.getY() + bounds.getHeight() * pos, bounds.getX(), bounds.getRight());
-            g.drawVerticalLine(bounds.getX() + bounds.getWidth() * pos, bounds.getY(), bounds.getBottom());
-        }
-
-        // Crosshair at position
-        float px = bounds.getX() + x * bounds.getWidth();
-        float py = bounds.getY() + (1.0f - y) * bounds.getHeight();
-
-        // Glow effect
-        g.setColour(juce::Colour(0xffff6600).withAlpha(0.3f));
-        g.fillEllipse(px - 15, py - 15, 30, 30);
-
-        // Pointer
-        g.setColour(juce::Colour(0xffff6600));
-        g.fillEllipse(px - 8, py - 8, 16, 16);
-
-        g.setColour(juce::Colours::white);
-        g.fillEllipse(px - 4, py - 4, 8, 8);
-
-        // Label
-        g.setColour(juce::Colour(0xffff6600));
-        g.setFont(juce::Font(10.0f, juce::Font::bold));
-        g.drawText("XY PAD", bounds.getX(), bounds.getY() + 2, 60, 15, juce::Justification::left);
-    }
-
-    void mouseDown(const juce::MouseEvent& e) override { updatePosition(e); }
-    void mouseDrag(const juce::MouseEvent& e) override { updatePosition(e); }
-
-    void updatePosition(const juce::MouseEvent& e)
-    {
-        auto bounds = getLocalBounds().reduced(2);
-        x = juce::jlimit(0.0f, 1.0f, (e.x - bounds.getX()) / (float)bounds.getWidth());
-        y = juce::jlimit(0.0f, 1.0f, 1.0f - (e.y - bounds.getY()) / (float)bounds.getHeight());
-        repaint();
-    }
-
-    float getX() const { return x; }
-    float getY() const { return y; }
-
-private:
-    float x, y;
-};
-
-//==============================================================================
 class FlarkDJEditor : public juce::AudioProcessorEditor
 {
 public:
@@ -361,7 +294,6 @@ private:
     //==============================================================================
     // Visual components
     std::unique_ptr<SpectrumAnalyzer> spectrumAnalyzer;
-    std::unique_ptr<XYPad> xyPad;
 
     //==============================================================================
     // Filter controls
@@ -369,10 +301,6 @@ private:
     juce::Slider filterCutoffSlider;
     juce::Slider filterResonanceSlider;
     juce::ComboBox filterTypeCombo;
-
-    // Sidechain controls (Filter section)
-    juce::ToggleButton sidechainEnabledButton;
-    juce::Slider sidechainThresholdSlider;
 
     // Reverb controls
     juce::ToggleButton reverbEnabledButton;
@@ -397,14 +325,7 @@ private:
     juce::Slider lfoDepthSlider;
     juce::ComboBox lfoWaveformCombo;
 
-    // Macro controls (4 macro knobs)
-    juce::Slider macro1Slider;
-    juce::Slider macro2Slider;
-    juce::Slider macro3Slider;
-    juce::Slider macro4Slider;
-
     // Master controls
-    juce::Slider masterMixSlider;
     juce::ToggleButton masterBypassButton;
 
     //==============================================================================
@@ -421,9 +342,6 @@ private:
     std::unique_ptr<SliderAttachment> filterCutoffAttachment;
     std::unique_ptr<SliderAttachment> filterResonanceAttachment;
     std::unique_ptr<ComboBoxAttachment> filterTypeAttachment;
-
-    std::unique_ptr<ButtonAttachment> sidechainEnabledAttachment;
-    std::unique_ptr<SliderAttachment> sidechainThresholdAttachment;
 
     std::unique_ptr<ButtonAttachment> reverbEnabledAttachment;
     std::unique_ptr<SliderAttachment> reverbRoomSizeAttachment;
@@ -444,7 +362,6 @@ private:
     std::unique_ptr<SliderAttachment> lfoDepthAttachment;
     std::unique_ptr<ComboBoxAttachment> lfoWaveformAttachment;
 
-    std::unique_ptr<SliderAttachment> masterMixAttachment;
     std::unique_ptr<ButtonAttachment> masterBypassAttachment;
 
     //==============================================================================

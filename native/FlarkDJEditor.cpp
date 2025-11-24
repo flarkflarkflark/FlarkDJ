@@ -186,28 +186,83 @@ void FlarkDJEditor::paint(juce::Graphics& g)
     g.setGradientFill(logoGradient);
     g.fillRect(logoArea);
 
-    // Draw "FlarkDJ" title with multi-layer glow effect
+    // Draw custom geometric "FlarkDJ" logo
     auto titleBounds = logoArea.reduced(10);
     juce::Colour orangeGlow(0xffff6600);
 
-    // Outer glow layers
-    for (int i = 4; i > 0; --i)
+    // Center the logo
+    float logoWidth = 280.0f;
+    float logoHeight = 50.0f;
+    float logoX = titleBounds.getCentreX() - logoWidth / 2;
+    float logoY = titleBounds.getCentreY() - logoHeight / 2 - 8;
+
+    // Draw stylized geometric "FlarkDJ" with angular shapes
+    g.setColour(orangeGlow);
+
+    // Each letter is drawn with geometric shapes to match the uploaded logo style
+    juce::Path logoPath;
+
+    // Simplified geometric font style
+    float letterSpacing = logoWidth / 7.0f;
+    float x = logoX;
+    float h = logoHeight;
+
+    // F
+    logoPath.addRectangle(x, logoY, 8, h);
+    logoPath.addRectangle(x, logoY, letterSpacing * 0.6f, 8);
+    logoPath.addRectangle(x, logoY + h * 0.4f, letterSpacing * 0.5f, 8);
+    x += letterSpacing;
+
+    // l
+    logoPath.addRectangle(x, logoY, 8, h);
+    logoPath.addRectangle(x, logoY + h - 8, letterSpacing * 0.4f, 8);
+    x += letterSpacing;
+
+    // a
+    logoPath.addRectangle(x, logoY + h * 0.3f, letterSpacing * 0.6f, 8);
+    logoPath.addRectangle(x, logoY + h * 0.3f, 8, h * 0.7f);
+    logoPath.addRectangle(x + letterSpacing * 0.5f, logoY + h * 0.3f, 8, h * 0.7f);
+    logoPath.addRectangle(x, logoY + h - 8, letterSpacing * 0.6f, 8);
+    x += letterSpacing;
+
+    // r
+    logoPath.addRectangle(x, logoY + h * 0.3f, 8, h * 0.7f);
+    logoPath.addRectangle(x, logoY + h * 0.3f, letterSpacing * 0.5f, 8);
+    x += letterSpacing;
+
+    // k
+    logoPath.addRectangle(x, logoY, 8, h);
+    logoPath.addRectangle(x + letterSpacing * 0.5f, logoY + h * 0.3f, 8, h * 0.3f);
+    logoPath.addRectangle(x + letterSpacing * 0.5f, logoY + h * 0.65f, 8, h * 0.35f);
+    x += letterSpacing;
+
+    // D
+    logoPath.addRectangle(x, logoY, 8, h);
+    logoPath.addRectangle(x, logoY, letterSpacing * 0.5f, 8);
+    logoPath.addRectangle(x, logoY + h - 8, letterSpacing * 0.5f, 8);
+    logoPath.addRectangle(x + letterSpacing * 0.5f, logoY + 8, 8, h - 16);
+    x += letterSpacing;
+
+    // J
+    logoPath.addRectangle(x, logoY + h * 0.5f, letterSpacing * 0.5f, 8);
+    logoPath.addRectangle(x + letterSpacing * 0.4f, logoY + h * 0.5f, 8, h * 0.5f);
+    logoPath.addRectangle(x, logoY + h - 8, letterSpacing * 0.5f, 8);
+
+    // Draw logo with glow
+    for (int i = 2; i > 0; --i)
     {
-        g.setColour(orangeGlow.withAlpha(0.12f * i));
-        g.setFont(juce::Font(38.0f + i * 3, juce::Font::bold));
-        g.drawText("FlarkDJ", titleBounds, juce::Justification::centred);
+        g.setColour(orangeGlow.withAlpha(0.2f * i));
+        g.fillPath(logoPath, juce::AffineTransform::scale(1.0f + i * 0.02f, 1.0f + i * 0.02f)
+                                              .translated(-logoWidth * i * 0.01f, -logoHeight * i * 0.01f));
     }
 
-    // Main title text
-    g.setColour(juce::Colours::white);
-    g.setFont(juce::Font(38.0f, juce::Font::bold));
-    g.drawText("FlarkDJ", titleBounds, juce::Justification::centred);
+    g.setColour(orangeGlow);
+    g.fillPath(logoPath);
 
     // Subtitle
-    g.setColour(orangeGlow);
-    g.setFont(juce::Font(12.0f));
-    auto subtitleArea = titleBounds.removeFromBottom(18);
-    g.drawText("Professional DJ Toolkit", subtitleArea, juce::Justification::centred);
+    g.setColour(orangeGlow.withAlpha(0.8f));
+    g.setFont(juce::Font(11.0f));
+    g.drawText("Professional DJ Toolkit", logoX, logoY + h + 5, logoWidth, 15, juce::Justification::centred);
 
     // Orange accent line with glow
     g.setColour(orangeGlow.withAlpha(0.3f));

@@ -270,6 +270,10 @@ private:
     DJKnobLookAndFeel djKnobLookAndFeel;
 
     //==============================================================================
+    // Logo
+    juce::Image logoImage;
+
+    //==============================================================================
     // Visual components
     std::unique_ptr<SpectrumAnalyzer> spectrumAnalyzer;
     std::unique_ptr<XYPad> xyPad;

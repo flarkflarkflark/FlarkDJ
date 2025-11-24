@@ -134,8 +134,8 @@ FlarkDJEditor::FlarkDJEditor(FlarkDJProcessor& p)
 
     // Enable resizing with constraints (AFTER all components are initialized)
     setResizable(true, true);
-    setResizeLimits(1200, 650, 1800, 1100);
-    setSize(1400, 750);
+    setResizeLimits(1200, 730, 1800, 1200);
+    setSize(1400, 820);
 }
 
 FlarkDJEditor::~FlarkDJEditor()
@@ -199,7 +199,7 @@ void FlarkDJEditor::paint(juce::Graphics& g)
     // Calculate section sizes based on current window size
     float scale = getWidth() / 1400.0f;
     int sectionWidth = static_cast<int>(400 * scale);
-    int sectionHeight = 280;  // Increased to fit all LFO controls
+    int sectionHeight = 330;  // Increased to fit all 5 LFO controls
 
     // Section borders
     juce::Colour borderColour = orangeGlow.withAlpha(0.7f);
@@ -245,7 +245,7 @@ void FlarkDJEditor::resized()
 
     float scale = getWidth() / 1400.0f;
     int sectionWidth = static_cast<int>(400 * scale);
-    int sectionHeight = 280;  // Increased from 250 to fit all LFO controls
+    int sectionHeight = 330;  // Increased to fit all 5 LFO controls
     int spacing = 10;
 
     // ========== FIRST ROW - Filter, Reverb, Delay ==========
@@ -316,15 +316,15 @@ void FlarkDJEditor::resized()
     // LFO section (with BPM sync)
     auto lfoArea = secondRow.removeFromLeft(sectionWidth).reduced(15, 15);
     lfoArea.removeFromTop(25);
-    lfoRateSlider.setBounds(lfoArea.removeFromTop(60));
-    lfoArea.removeFromTop(6);
-    lfoDepthSlider.setBounds(lfoArea.removeFromTop(60));
-    lfoArea.removeFromTop(8);
-    lfoWaveformCombo.setBounds(lfoArea.removeFromTop(24));
+    lfoRateSlider.setBounds(lfoArea.removeFromTop(55));
+    lfoArea.removeFromTop(5);
+    lfoDepthSlider.setBounds(lfoArea.removeFromTop(55));
     lfoArea.removeFromTop(10);
-    lfoSyncButton.setBounds(lfoArea.removeFromTop(26));
-    lfoArea.removeFromTop(10);
-    lfoSyncRateCombo.setBounds(lfoArea.removeFromTop(26));
+    lfoWaveformCombo.setBounds(lfoArea.removeFromTop(26));
+    lfoArea.removeFromTop(12);
+    lfoSyncButton.setBounds(lfoArea.removeFromTop(28));
+    lfoArea.removeFromTop(12);
+    lfoSyncRateCombo.setBounds(lfoArea.removeFromTop(28));
 }
 
 //==============================================================================

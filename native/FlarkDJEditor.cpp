@@ -269,9 +269,11 @@ void FlarkDJEditor::paint(juce::Graphics& g)
     juce::Colour borderColour = orangeGlow.withAlpha(0.7f);
     g.setColour(borderColour);
 
-    int yPos = 93;
+    // Account for top bar (45*scale) + spacing (5*scale) = 50*scale
+    int yPos = 83 + static_cast<int>(50 * scale);
     int xPos = 10;
     int spacing = 10;
+    int titleOffset = static_cast<int>(5 * scale);  // Move title down from top edge
 
     // 2 rows of 3 effects each
     const char* titles[] = {"FILTER", "REVERB", "DELAY", "FLANGER", "ISOLATOR", "LFO"};
@@ -288,16 +290,16 @@ void FlarkDJEditor::paint(juce::Graphics& g)
             // Draw box
             g.drawRect(boxX, rowY, sectionWidth, sectionHeight, 3);
 
-            // Draw title with glow effect
+            // Draw title with glow effect (positioned lower to avoid overlap with top bar)
             g.setFont(juce::Font(13.0f, juce::Font::bold));
 
             // Glow
             g.setColour(orangeGlow.withAlpha(0.4f));
-            g.drawText(titles[idx], boxX, rowY, sectionWidth, 20, juce::Justification::centred);
+            g.drawText(titles[idx], boxX, rowY + titleOffset, sectionWidth, 25, juce::Justification::centred);
 
             // Main text
             g.setColour(juce::Colours::white);
-            g.drawText(titles[idx], boxX, rowY, sectionWidth, 20, juce::Justification::centred);
+            g.drawText(titles[idx], boxX, rowY + titleOffset, sectionWidth, 25, juce::Justification::centred);
         }
     }
 }
@@ -554,16 +556,20 @@ void FlarkDJEditor::loadPresetList()
 
 void FlarkDJEditor::savePreset()
 {
-    juce::AlertWindow::showAsync(juce::MessageBoxOptions()
-        .withIconType(juce::MessageBoxIconType::NoIcon)
-        .withTitle("Save Preset")
-        .withMessage("Enter preset name:")
-        .withButton("Save")
-        .withButton("Cancel"),
-        [this](int result) {
-            if (result == 1) {
-                // In a real implementation, we'd get the text from the editor
-                auto presetName = juce::String("NewPreset_") + juce::String(juce::Random::getSystemRandom().nextInt(1000));
+    // Create a proper alert window with text editor
+    auto* alertWindow = new juce::AlertWindow("Save Preset",
+                                               "Enter a name for this preset:",
+                                               juce::MessageBoxIconType::NoIcon);
+
+    alertWindow->addTextEditor("presetName", "", "Preset Name:");
+    alertWindow->addButton("Save", 1, juce::KeyPress(juce::KeyPress::returnKey));
+    alertWindow->addButton("Cancel", 0, juce::KeyPress(juce::KeyPress::escapeKey));
+
+    alertWindow->enterModalState(true, juce::ModalCallbackFunction::create(
+        [this, alertWindow](int result) {
+            if (result == 1)
+            {
+                auto presetName = alertWindow->getTextEditorContents("presetName").trim();
 
                 if (presetName.isNotEmpty())
                 {
@@ -586,11 +592,15 @@ void FlarkDJEditor::savePreset()
                     }
                 }
             }
-        });
+            delete alertWindow;
+        }), true);
 }
 
 void FlarkDJEditor::loadPreset(const juce::String& presetName)
 {
+    if (presetName.isEmpty() || presetName == "-- No Presets --")
+        return;
+
     auto presetDir = getPresetDirectory();
     auto presetFile = presetDir.getChildFile(presetName + ".fxp");
 
@@ -601,6 +611,11 @@ void FlarkDJEditor::loadPreset(const juce::String& presetName)
         if (presetFile.loadFileAsData(data))
         {
             audioProcessor.setStateInformation(data.getData(), static_cast<int>(data.getSize()));
+
+            // Show success message
+            juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::InfoIcon,
+                                                   "Preset Loaded",
+                                                   "Loaded preset: " + presetName);
         }
         else
         {
@@ -608,6 +623,12 @@ void FlarkDJEditor::loadPreset(const juce::String& presetName)
                                                    "Load Failed",
                                                    "Could not load preset file.");
         }
+    }
+    else
+    {
+        juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::WarningIcon,
+                                               "Preset Not Found",
+                                               "Preset file does not exist: " + presetName);
     }
 }
 

@@ -87,6 +87,10 @@ private:
     std::atomic<float>* delayWetDry = nullptr;
 
     std::atomic<float>* flangerEnabled = nullptr;
+    std::atomic<float>* flangerRate = nullptr;
+    std::atomic<float>* flangerDepth = nullptr;
+    std::atomic<float>* flangerFeedback = nullptr;
+    std::atomic<float>* flangerWetDry = nullptr;
 
     std::atomic<float>* sidechainEnabled = nullptr;
     std::atomic<float>* sidechainThreshold = nullptr;
@@ -109,6 +113,7 @@ private:
     FlarkFilter filterLeft, filterRight;
     FlarkReverb reverbLeft, reverbRight;
     FlarkDelay delayLeft, delayRight;
+    FlarkFlanger flangerLeft, flangerRight;
     FlarkLFO lfo;
 
     //==============================================================================

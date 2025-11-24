@@ -33,6 +33,14 @@ FlarkDJProcessor::FlarkDJProcessor()
                         0.0f, 1.0f, 0.5f),
 
                     std::make_unique<juce::AudioParameterBool>("flangerEnabled", "Flanger Enabled", false),
+                    std::make_unique<juce::AudioParameterFloat>("flangerRate", "Flanger Rate",
+                        juce::NormalisableRange<float>(0.1f, 10.0f, 0.1f), 0.5f),
+                    std::make_unique<juce::AudioParameterFloat>("flangerDepth", "Flanger Depth",
+                        0.0f, 1.0f, 0.5f),
+                    std::make_unique<juce::AudioParameterFloat>("flangerFeedback", "Flanger Feedback",
+                        0.0f, 0.95f, 0.5f),
+                    std::make_unique<juce::AudioParameterFloat>("flangerWetDry", "Flanger Wet/Dry",
+                        0.0f, 1.0f, 0.5f),
 
                     std::make_unique<juce::AudioParameterBool>("sidechainEnabled", "Sidechain Enabled", false),
                     std::make_unique<juce::AudioParameterFloat>("sidechainThreshold", "Sidechain Threshold",
@@ -67,6 +75,10 @@ FlarkDJProcessor::FlarkDJProcessor()
     delayWetDry = parameters.getRawParameterValue("delayWetDry");
 
     flangerEnabled = parameters.getRawParameterValue("flangerEnabled");
+    flangerRate = parameters.getRawParameterValue("flangerRate");
+    flangerDepth = parameters.getRawParameterValue("flangerDepth");
+    flangerFeedback = parameters.getRawParameterValue("flangerFeedback");
+    flangerWetDry = parameters.getRawParameterValue("flangerWetDry");
 
     sidechainEnabled = parameters.getRawParameterValue("sidechainEnabled");
     sidechainThreshold = parameters.getRawParameterValue("sidechainThreshold");
@@ -110,6 +122,9 @@ void FlarkDJProcessor::initializeFlarkDJ()
 
     delayLeft.setSampleRate(sr);
     delayRight.setSampleRate(sr);
+
+    flangerLeft.setSampleRate(sr);
+    flangerRight.setSampleRate(sr);
 
     lfo.setSampleRate(sr);
 }
@@ -172,6 +187,7 @@ void FlarkDJProcessor::processAudio(float* leftIn, float* rightIn,
     bool filterOn = filterEnabled->load() > 0.5f;
     bool reverbOn = reverbEnabled->load() > 0.5f;
     bool delayOn = delayEnabled->load() > 0.5f;
+    bool flangerOn = flangerEnabled->load() > 0.5f;
 
     // Update filter parameters
     if (filterOn)
@@ -206,6 +222,19 @@ void FlarkDJProcessor::processAudio(float* leftIn, float* rightIn,
         delayRight.setFeedback(delayFeedback->load());
         delayLeft.setWetDryMix(delayWetDry->load());
         delayRight.setWetDryMix(delayWetDry->load());
+    }
+
+    // Update flanger parameters
+    if (flangerOn)
+    {
+        flangerLeft.setRate(flangerRate->load());
+        flangerRight.setRate(flangerRate->load());
+        flangerLeft.setDepth(flangerDepth->load());
+        flangerRight.setDepth(flangerDepth->load());
+        flangerLeft.setFeedback(flangerFeedback->load());
+        flangerRight.setFeedback(flangerFeedback->load());
+        flangerLeft.setWetDryMix(flangerWetDry->load());
+        flangerRight.setWetDryMix(flangerWetDry->load());
     }
 
     // Update LFO parameters
@@ -246,6 +275,13 @@ void FlarkDJProcessor::processAudio(float* leftIn, float* rightIn,
         {
             leftSample = delayLeft.process(leftSample);
             rightSample = delayRight.process(rightSample);
+        }
+
+        // Apply flanger
+        if (flangerOn)
+        {
+            leftSample = flangerLeft.process(leftSample);
+            rightSample = flangerRight.process(rightSample);
         }
 
         // Write to output

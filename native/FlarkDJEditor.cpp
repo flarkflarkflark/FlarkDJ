@@ -96,17 +96,17 @@ FlarkDJEditor::FlarkDJEditor(FlarkDJProcessor& p)
 
     addAndMakeVisible(flangerRateSlider);
     setupSlider(flangerRateSlider);
-    flangerRateAttachment.reset(new SliderAttachment(params, "lfoRate", flangerRateSlider)); // Reuse LFO rate
+    flangerRateAttachment.reset(new SliderAttachment(params, "flangerRate", flangerRateSlider));
     createLabel("Rate", flangerRateSlider);
 
     addAndMakeVisible(flangerDepthSlider);
     setupSlider(flangerDepthSlider);
-    flangerDepthAttachment.reset(new SliderAttachment(params, "lfoDepth", flangerDepthSlider)); // Reuse LFO depth
+    flangerDepthAttachment.reset(new SliderAttachment(params, "flangerDepth", flangerDepthSlider));
     createLabel("Depth", flangerDepthSlider);
 
     addAndMakeVisible(flangerFeedbackSlider);
     setupSlider(flangerFeedbackSlider);
-    flangerFeedbackAttachment.reset(new SliderAttachment(params, "delayFeedback", flangerFeedbackSlider)); // Reuse delay feedback
+    flangerFeedbackAttachment.reset(new SliderAttachment(params, "flangerFeedback", flangerFeedbackSlider));
     createLabel("Feedback", flangerFeedbackSlider);
 
     // ========== LFO SECTION ==========

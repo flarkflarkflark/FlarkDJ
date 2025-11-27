@@ -51,7 +51,7 @@ jobs:
 
   build-macos:
     name: Build macOS (VST3)
-    runs-on: macos-latest
+    runs-on: macos-13
 
     steps:
     - name: Checkout code

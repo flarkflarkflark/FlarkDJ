@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(FlarkDJ VERSION 1.0.0)
+project(FlarkDJ VERSION 1.1.0)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -22,8 +22,17 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(JUCE)
 
-# Plugin formats to build
-set(FLARKDJ_FORMATS VST3 AU Standalone LV2 CLAP)
+# Plugin formats to build (platform-specific)
+set(FLARKDJ_FORMATS VST3 Standalone)
+
+# Add platform-specific formats
+if(APPLE)
+    # Skip AU for now to avoid build issues on CI
+    # list(APPEND FLARKDJ_FORMATS AU)
+elseif(UNIX AND NOT APPLE)
+    # Linux only
+    list(APPEND FLARKDJ_FORMATS LV2)
+endif()
 
 # Optionally add AAX if SDK is available
 # if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/SDKs/AAX")
@@ -61,8 +70,8 @@ juce_add_plugin(FlarkDJ
     # CLAP settings
     CLAP_ID com.flarkdj.flarkdj
 
-    # Copy plugin to system folders after build (optional)
-    COPY_PLUGIN_AFTER_BUILD TRUE
+    # Copy plugin to system folders after build (disable on CI)
+    COPY_PLUGIN_AFTER_BUILD FALSE
 )
 
 # Source files
@@ -71,6 +80,7 @@ target_sources(FlarkDJ PRIVATE
     FlarkDJProcessor.h
     FlarkDJEditor.cpp
     FlarkDJEditor.h
+    FlarkDJDSP.h
 )
 
 # Compiler definitions

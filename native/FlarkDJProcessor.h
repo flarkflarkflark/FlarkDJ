@@ -101,9 +101,12 @@ private:
     std::atomic<float>* lfoRate = nullptr;
     std::atomic<float>* lfoDepth = nullptr;
     std::atomic<float>* lfoWaveform = nullptr;
+    std::atomic<float>* lfoSync = nullptr;
+    std::atomic<float>* lfoSyncRate = nullptr;
 
-    std::atomic<float>* masterMix = nullptr;
-    std::atomic<float>* masterBypass = nullptr;
+    std::atomic<float>* isolatorEnabled = nullptr;
+    std::atomic<float>* isolatorPosition = nullptr;
+    std::atomic<float>* isolatorQ = nullptr;
 
     //==============================================================================
     // Audio processing state
@@ -114,10 +117,11 @@ private:
     //==============================================================================
     // FlarkDJ DSP components (pure C++ implementations)
     // Stereo processing - one instance per channel
-    FlarkFilter filterLeft, filterRight;
+    FlarkButterworthFilter filterLeft, filterRight;  // Upgraded to steep Butterworth
     FlarkReverb reverbLeft, reverbRight;
     FlarkDelay delayLeft, delayRight;
     FlarkFlanger flangerLeft, flangerRight;
+    FlarkIsolator isolatorLeft, isolatorRight;  // New DJ isolator effect
     FlarkLFO lfo;
 
     //==============================================================================

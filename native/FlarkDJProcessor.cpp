@@ -10,9 +10,9 @@ FlarkDJProcessor::FlarkDJProcessor()
                 {
                     std::make_unique<juce::AudioParameterBool>("filterEnabled", "Filter Enabled", true),
                     std::make_unique<juce::AudioParameterFloat>("filterCutoff", "Filter Cutoff",
-                        juce::NormalisableRange<float>(20.0f, 20000.0f, 1.0f, 0.3f), 1000.0f),
+                        juce::NormalisableRange<float>(20.0f, 20000.0f, 1.0f, 0.3f), 400.0f),
                     std::make_unique<juce::AudioParameterFloat>("filterResonance", "Filter Resonance",
-                        0.1f, 10.0f, 1.0f),
+                        0.1f, 10.0f, 3.0f),
                     std::make_unique<juce::AudioParameterChoice>("filterType", "Filter Type",
                         juce::StringArray{"Lowpass", "Highpass", "Bandpass"}, 0),
 
@@ -22,7 +22,7 @@ FlarkDJProcessor::FlarkDJProcessor()
                     std::make_unique<juce::AudioParameterFloat>("reverbDamping", "Reverb Damping",
                         0.0f, 1.0f, 0.5f),
                     std::make_unique<juce::AudioParameterFloat>("reverbWetDry", "Reverb Wet/Dry",
-                        0.0f, 1.0f, 0.3f),
+                        0.0f, 1.0f, 0.6f),
 
                     std::make_unique<juce::AudioParameterBool>("delayEnabled", "Delay Enabled", false),
                     std::make_unique<juce::AudioParameterFloat>("delayTime", "Delay Time",
@@ -49,13 +49,18 @@ FlarkDJProcessor::FlarkDJProcessor()
                     std::make_unique<juce::AudioParameterFloat>("lfoRate", "LFO Rate",
                         juce::NormalisableRange<float>(0.1f, 20.0f, 0.1f, 0.5f), 1.0f),
                     std::make_unique<juce::AudioParameterFloat>("lfoDepth", "LFO Depth",
-                        0.0f, 1.0f, 0.0f),
+                        0.0f, 1.0f, 0.3f),
                     std::make_unique<juce::AudioParameterChoice>("lfoWaveform", "LFO Waveform",
                         juce::StringArray{"Sine", "Square", "Triangle", "Sawtooth"}, 0),
+                    std::make_unique<juce::AudioParameterBool>("lfoSync", "LFO BPM Sync", false),
+                    std::make_unique<juce::AudioParameterChoice>("lfoSyncRate", "LFO Sync Rate",
+                        juce::StringArray{"1/4", "1/8", "1/16", "1/32", "1/2", "1 Bar"}, 0),
 
-                    std::make_unique<juce::AudioParameterFloat>("masterMix", "Master Mix",
-                        0.0f, 1.0f, 1.0f),
-                    std::make_unique<juce::AudioParameterBool>("masterBypass", "Master Bypass", false)
+                    std::make_unique<juce::AudioParameterBool>("isolatorEnabled", "Isolator Enabled", false),
+                    std::make_unique<juce::AudioParameterFloat>("isolatorPosition", "Isolator Position",
+                        -1.0f, 1.0f, 0.0f),
+                    std::make_unique<juce::AudioParameterFloat>("isolatorQ", "Isolator Q",
+                        0.5f, 10.0f, 2.0f)
                 })
 {
     // Get parameter pointers
@@ -86,9 +91,12 @@ FlarkDJProcessor::FlarkDJProcessor()
     lfoRate = parameters.getRawParameterValue("lfoRate");
     lfoDepth = parameters.getRawParameterValue("lfoDepth");
     lfoWaveform = parameters.getRawParameterValue("lfoWaveform");
+    lfoSync = parameters.getRawParameterValue("lfoSync");
+    lfoSyncRate = parameters.getRawParameterValue("lfoSyncRate");
 
-    masterMix = parameters.getRawParameterValue("masterMix");
-    masterBypass = parameters.getRawParameterValue("masterBypass");
+    isolatorEnabled = parameters.getRawParameterValue("isolatorEnabled");
+    isolatorPosition = parameters.getRawParameterValue("isolatorPosition");
+    isolatorQ = parameters.getRawParameterValue("isolatorQ");
 }
 
 FlarkDJProcessor::~FlarkDJProcessor()
@@ -126,6 +134,9 @@ void FlarkDJProcessor::initializeFlarkDJ()
     flangerLeft.setSampleRate(sr);
     flangerRight.setSampleRate(sr);
 
+    isolatorLeft.setSampleRate(sr);
+    isolatorRight.setSampleRate(sr);
+
     lfo.setSampleRate(sr);
 }
 
@@ -153,10 +164,6 @@ void FlarkDJProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Midi
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
-    // Check bypass
-    if (masterBypass->load() > 0.5f)
-        return;
-
     // Get audio buffers
     auto* leftChannel  = buffer.getWritePointer(0);
     auto* rightChannel = buffer.getWritePointer(1);
@@ -164,20 +171,6 @@ void FlarkDJProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Midi
 
     // Process audio through FlarkDJ engine
     processAudio(leftChannel, rightChannel, leftChannel, rightChannel, numSamples);
-
-    // Apply master mix
-    float mix = masterMix->load();
-    if (mix < 1.0f)
-    {
-        auto* leftInput = buffer.getReadPointer(0);
-        auto* rightInput = buffer.getReadPointer(1);
-
-        for (int i = 0; i < numSamples; ++i)
-        {
-            leftChannel[i] = leftInput[i] * (1.0f - mix) + leftChannel[i] * mix;
-            rightChannel[i] = rightInput[i] * (1.0f - mix) + rightChannel[i] * mix;
-        }
-    }
 
     // Calculate RMS level for spectrum display
     float rms = 0.0f;
@@ -198,6 +191,7 @@ void FlarkDJProcessor::processAudio(float* leftIn, float* rightIn,
     bool reverbOn = reverbEnabled->load() > 0.5f;
     bool delayOn = delayEnabled->load() > 0.5f;
     bool flangerOn = flangerEnabled->load() > 0.5f;
+    bool isolatorOn = isolatorEnabled->load() > 0.5f;
 
     // Update filter parameters
     if (filterOn)
@@ -208,8 +202,8 @@ void FlarkDJProcessor::processAudio(float* leftIn, float* rightIn,
         filterRight.setResonance(filterResonance->load());
 
         int filterTypeInt = static_cast<int>(filterType->load());
-        filterLeft.setType(static_cast<FlarkFilter::FilterType>(filterTypeInt));
-        filterRight.setType(static_cast<FlarkFilter::FilterType>(filterTypeInt));
+        filterLeft.setType(static_cast<FlarkButterworthFilter::FilterType>(filterTypeInt));
+        filterRight.setType(static_cast<FlarkButterworthFilter::FilterType>(filterTypeInt));
     }
 
     // Update reverb parameters
@@ -247,10 +241,39 @@ void FlarkDJProcessor::processAudio(float* leftIn, float* rightIn,
         flangerRight.setWetDryMix(flangerWetDry->load());
     }
 
+    // Update isolator parameters
+    if (isolatorOn)
+    {
+        isolatorLeft.setPosition(isolatorPosition->load());
+        isolatorRight.setPosition(isolatorPosition->load());
+        isolatorLeft.setQ(isolatorQ->load());
+        isolatorRight.setQ(isolatorQ->load());
+    }
+
     // Update LFO parameters
     lfo.setRate(lfoRate->load());
     int lfoWaveformInt = static_cast<int>(lfoWaveform->load());
     lfo.setWaveform(static_cast<FlarkLFO::Waveform>(lfoWaveformInt));
+
+    // BPM sync
+    bool syncEnabled = lfoSync->load() > 0.5f;
+    lfo.setSyncEnabled(syncEnabled);
+    if (syncEnabled)
+    {
+        auto playHead = getPlayHead();
+        if (playHead != nullptr)
+        {
+            if (auto posInfo = playHead->getPosition())
+            {
+                if (posInfo->getBpm().hasValue())
+                {
+                    lfo.setBPM(*posInfo->getBpm());
+                }
+            }
+        }
+        int syncRateInt = static_cast<int>(lfoSyncRate->load());
+        lfo.setSyncRate(syncRateInt);
+    }
 
     // Process each sample
     for (int i = 0; i < numSamples; ++i)
@@ -265,7 +288,8 @@ void FlarkDJProcessor::processAudio(float* leftIn, float* rightIn,
         // Apply filter with LFO modulation on cutoff
         if (filterOn)
         {
-            float cutoffMod = filterCutoff->load() * (1.0f + lfoValue * lfoDepthValue * 0.5f);
+            // LFO modulates cutoff with much wider range (up to 3x variation)
+            float cutoffMod = filterCutoff->load() * (1.0f + lfoValue * lfoDepthValue * 3.0f);
             filterLeft.setCutoff(cutoffMod);
             filterRight.setCutoff(cutoffMod);
 
@@ -293,6 +317,23 @@ void FlarkDJProcessor::processAudio(float* leftIn, float* rightIn,
             leftSample = flangerLeft.process(leftSample);
             rightSample = flangerRight.process(rightSample);
         }
+
+        // Apply isolator (DJ-style filter sweep)
+        if (isolatorOn)
+        {
+            leftSample = isolatorLeft.process(leftSample);
+            rightSample = isolatorRight.process(rightSample);
+        }
+
+        // ========== OUTPUT LIMITER ==========
+        // Soft limiting to prevent clipping and channel muting in DAWs
+        // Uses tanh for smooth saturation with threshold at -0.5dB (~0.95)
+        const float threshold = 0.95f;
+        const float makeup = 1.0f / threshold; // Compensate for threshold reduction
+
+        // Soft clip using tanh for smooth saturation
+        leftSample = std::tanh(leftSample * makeup) * threshold;
+        rightSample = std::tanh(rightSample * makeup) * threshold;
 
         // Write to output
         leftOut[i] = leftSample;

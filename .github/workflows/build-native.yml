@@ -1,0 +1,238 @@
+name: Build Native Plugins
+
+on:
+  push:
+    branches: [ main, develop, 'claude/**' ]
+    paths:
+      - 'native/**'
+      - '.github/workflows/build-native.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'native/**'
+      - '.github/workflows/build-native.yml'
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    name: Build Windows (VST3)
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Setup MSVC
+      uses: microsoft/setup-msbuild@v1.3
+
+    - name: Configure CMake
+      working-directory: native
+      run: |
+        cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build
+      working-directory: native/build
+      run: cmake --build . --config Release --parallel
+
+    - name: Package Windows artifacts
+      run: |
+        mkdir FlarkDJ-Windows
+        cp native/build/FlarkDJ_artefacts/Release/VST3/FlarkDJ.vst3 FlarkDJ-Windows/ -Recurse
+        cp native/build/FlarkDJ_artefacts/Release/Standalone/FlarkDJ.exe FlarkDJ-Windows/
+
+    - name: Upload Windows artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: FlarkDJ-Windows-x64
+        path: FlarkDJ-Windows/
+        retention-days: 30
+
+  build-macos:
+    name: Build macOS (VST3)
+    runs-on: macos-13
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install dependencies
+      run: |
+        brew install cmake
+
+    - name: Configure CMake
+      working-directory: native
+      run: |
+        cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build
+      working-directory: native/build
+      run: cmake --build . --config Release --parallel
+
+    - name: List build artifacts
+      run: |
+        echo "Contents of build directory:"
+        ls -la native/build/ || true
+        echo "Contents of FlarkDJ_artefacts:"
+        ls -la native/build/FlarkDJ_artefacts/ || true
+        echo "Contents of Release:"
+        ls -la native/build/FlarkDJ_artefacts/Release/ || true
+
+    - name: Package macOS artifacts
+      run: |
+        mkdir FlarkDJ-macOS
+        cp -R native/build/FlarkDJ_artefacts/Release/VST3/FlarkDJ.vst3 FlarkDJ-macOS/
+        # AU temporarily disabled for CI builds
+        # cp -R native/build/FlarkDJ_artefacts/Release/AU/FlarkDJ.component FlarkDJ-macOS/
+        cp -R native/build/FlarkDJ_artefacts/Release/Standalone/FlarkDJ.app FlarkDJ-macOS/
+
+    - name: Upload macOS artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: FlarkDJ-macOS-Universal
+        path: FlarkDJ-macOS/
+        retention-days: 30
+
+  build-linux:
+    name: Build Linux (VST3, LV2)
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          cmake \
+          build-essential \
+          pkg-config \
+          libasound2-dev \
+          libfreetype6-dev \
+          libx11-dev \
+          libxcomposite-dev \
+          libxcursor-dev \
+          libxext-dev \
+          libxinerama-dev \
+          libxrandr-dev \
+          libxrender-dev \
+          libgl1-mesa-dev \
+          libglu1-mesa-dev \
+          libcurl4-openssl-dev
+
+    - name: Configure CMake
+      working-directory: native
+      run: |
+        cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build
+      working-directory: native/build
+      run: cmake --build . --config Release --parallel
+
+    - name: Package Linux artifacts
+      run: |
+        mkdir FlarkDJ-Linux
+        cp -R native/build/FlarkDJ_artefacts/Release/VST3/FlarkDJ.vst3 FlarkDJ-Linux/
+        cp -R native/build/FlarkDJ_artefacts/Release/LV2/FlarkDJ.lv2 FlarkDJ-Linux/
+        cp native/build/FlarkDJ_artefacts/Release/Standalone/FlarkDJ FlarkDJ-Linux/
+        chmod +x FlarkDJ-Linux/FlarkDJ
+
+    - name: Create tarball
+      run: tar czf FlarkDJ-Linux-x86_64.tar.gz FlarkDJ-Linux/
+
+    - name: Upload Linux artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: FlarkDJ-Linux-x86_64
+        path: |
+          FlarkDJ-Linux-x86_64.tar.gz
+          FlarkDJ-Linux/
+        retention-days: 30
+
+  create-release:
+    name: Create Release
+    needs: [build-windows, build-macos, build-linux]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts/
+
+    - name: Create release archives
+      run: |
+        cd artifacts
+
+        # Windows
+        cd FlarkDJ-Windows-x64
+        zip -r ../FlarkDJ-Windows-x64.zip *
+        cd ..
+
+        # macOS
+        cd FlarkDJ-macOS-Universal
+        zip -r ../FlarkDJ-macOS-Universal.zip *
+        cd ..
+
+        # Linux tarball already created
+
+    - name: Get version
+      id: version
+      run: |
+        VERSION=$(grep "project(FlarkDJ VERSION" native/CMakeLists.txt | sed -n 's/.*VERSION \([0-9.]*\).*/\1/p')
+        echo "version=v${VERSION}" >> $GITHUB_OUTPUT
+        echo "Version: v${VERSION}"
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.version.outputs.version }}-${{ github.run_number }}
+        name: FlarkDJ ${{ steps.version.outputs.version }} Build ${{ github.run_number }}
+        draft: true
+        files: |
+          artifacts/FlarkDJ-Windows-x64.zip
+          artifacts/FlarkDJ-macOS-Universal.zip
+          artifacts/FlarkDJ-Linux-x86_64.tar.gz
+        body: |
+          ## FlarkDJ Native Plugins
+
+          Automated build from commit ${{ github.sha }}
+
+          ### Downloads
+
+          - **Windows**: `FlarkDJ-Windows-x64.zip` (VST3, Standalone)
+          - **macOS**: `FlarkDJ-macOS-Universal.zip` (VST3, Standalone)
+          - **Linux**: `FlarkDJ-Linux-x86_64.tar.gz` (VST3, LV2, Standalone)
+
+          ### Installation
+
+          #### Windows
+          1. Extract `FlarkDJ.vst3` to `C:\Program Files\Common Files\VST3\`
+          2. Rescan plugins in your DAW
+
+          #### macOS
+          1. Extract and copy:
+             - `FlarkDJ.vst3` to `~/Library/Audio/Plug-Ins/VST3/`
+          2. Rescan plugins in your DAW
+
+          #### Linux
+          1. Extract tarball: `tar xzf FlarkDJ-Linux-x86_64.tar.gz`
+          2. Copy:
+             - `FlarkDJ.vst3` to `~/.vst3/`
+             - `FlarkDJ.lv2` to `~/.lv2/`
+          3. Rescan plugins in your DAW
+
+          ### Changes
+          See commit history for details.
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

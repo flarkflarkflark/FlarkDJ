@@ -22,8 +22,16 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(JUCE)
 
-# Plugin formats to build
-set(FLARKDJ_FORMATS VST3 AU Standalone LV2 CLAP)
+# Plugin formats to build (platform-specific)
+set(FLARKDJ_FORMATS VST3 Standalone)
+
+# Add platform-specific formats
+if(APPLE)
+    list(APPEND FLARKDJ_FORMATS AU)
+elseif(UNIX AND NOT APPLE)
+    # Linux only
+    list(APPEND FLARKDJ_FORMATS LV2)
+endif()
 
 # Optionally add AAX if SDK is available
 # if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/SDKs/AAX")
@@ -61,8 +69,8 @@ juce_add_plugin(FlarkDJ
     # CLAP settings
     CLAP_ID com.flarkdj.flarkdj
 
-    # Copy plugin to system folders after build (optional)
-    COPY_PLUGIN_AFTER_BUILD TRUE
+    # Copy plugin to system folders after build (disable on CI)
+    COPY_PLUGIN_AFTER_BUILD FALSE
 )
 
 # Source files

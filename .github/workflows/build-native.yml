@@ -91,7 +91,7 @@ jobs:
         retention-days: 30
 
   build-linux:
-    name: Build Linux (VST3, LV2, CLAP)
+    name: Build Linux (VST3, LV2)
     runs-on: ubuntu-latest
 
     steps:
@@ -207,9 +207,9 @@ jobs:
 
           ### Downloads
 
-          - **Windows**: `FlarkDJ-Windows-x64.zip` (VST3)
-          - **macOS**: `FlarkDJ-macOS-Universal.zip` (VST3, AU)
-          - **Linux**: `FlarkDJ-Linux-x86_64.tar.gz` (VST3, LV2)
+          - **Windows**: `FlarkDJ-Windows-x64.zip` (VST3, Standalone)
+          - **macOS**: `FlarkDJ-macOS-Universal.zip` (VST3, AU, Standalone)
+          - **Linux**: `FlarkDJ-Linux-x86_64.tar.gz` (VST3, LV2, Standalone)
 
           ### Installation
 

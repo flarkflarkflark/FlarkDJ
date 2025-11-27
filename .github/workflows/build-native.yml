@@ -13,6 +13,9 @@ on:
       - '.github/workflows/build-native.yml'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-windows:
     name: Build Windows (VST3)
@@ -184,7 +187,8 @@ jobs:
         zip -r ../FlarkDJ-macOS-Universal.zip *
         cd ..
 
-        # Linux tarball already created
+        # Linux tarball - move it up from subdirectory
+        mv FlarkDJ-Linux-x86_64/FlarkDJ-Linux-x86_64.tar.gz . || true
 
     - name: Get version
       id: version

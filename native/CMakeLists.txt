@@ -80,6 +80,7 @@ target_sources(FlarkDJ PRIVATE
     FlarkDJProcessor.h
     FlarkDJEditor.cpp
     FlarkDJEditor.h
+    FlarkDJDSP.h
 )
 
 # Compiler definitions

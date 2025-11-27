@@ -72,6 +72,15 @@ jobs:
       working-directory: native/build
       run: cmake --build . --config Release --parallel
 
+    - name: List build artifacts
+      run: |
+        echo "Contents of build directory:"
+        ls -la native/build/ || true
+        echo "Contents of FlarkDJ_artefacts:"
+        ls -la native/build/FlarkDJ_artefacts/ || true
+        echo "Contents of Release:"
+        ls -la native/build/FlarkDJ_artefacts/Release/ || true
+
     - name: Package macOS artifacts
       run: |
         mkdir FlarkDJ-macOS

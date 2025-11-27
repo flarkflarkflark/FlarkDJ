@@ -1,115 +1,143 @@
 # FlarkDJ
 
-A comprehensive DJ toolkit plugin with advanced effects, modulation, and control features.
+A professional DJ effects plugin with advanced audio processing, modulation, and real-time control features. Available as native VST3/LV2 plugins for Windows, macOS, and Linux.
+
+## 🎉 What's New in v1.1.0
+
+- **Multi-Platform Builds**: Windows, macOS, and Linux support with automated CI/CD
+- **Preset Manager**: Save, load, and organize your favorite effect settings
+- **XY Pad**: Interactive 2D control surface for expressive sound design
+- **A/B Snapshots**: Instantly compare two effect states
+- **Output Limiter**: Prevents clipping with smooth tanh saturation
+- **Compact UI**: 32% smaller window, 50% smaller knobs, fully resizable
+- **BPM Sync**: LFO locks to DAW tempo with note divisions
 
 ## Features
 
-### Core Audio Processing
-- **Effect Chaining**: Run multiple effects in series with customizable order
-- **Built-in Effects**:
-  - Filter (lowpass/highpass/bandpass with resonance control)
-  - Reverb (algorithmic reverb with room size and damping)
-  - Delay (up to 2 seconds with feedback control)
-- **High-Quality Processing**: 44.1kHz+ sample rate support
+### Core Audio Effects
+- **Butterworth Filter**: Airwindows-inspired resonant filter with lowpass/highpass/bandpass modes
+- **DJ Isolator**: Sweep between frequency bands with adjustable Q
+- **Reverb**: Algorithmic reverb with room size and damping controls
+- **Delay**: Up to 2 seconds with feedback and wet/dry mix
+- **Flanger**: Classic modulation effect with rate, depth, and feedback
+- **Output Limiter**: Soft limiting to prevent clipping (tanh saturation @ -0.5dB)
 
 ### Advanced Features
 
-#### MIDI Learn
-- Map any MIDI CC to effect parameters
-- Support for multiple MIDI channels
-- Visual feedback during learning mode
-- Save and load MIDI mappings
+#### Preset Manager
+- Save, load, and delete effect presets to disk
+- Presets stored in `~/Documents/FlarkDJ/Presets/` as `.fxp` files
+- Quick access via dropdown menu
+- Full parameter state capture and recall
 
-#### LFO Modulation System
-- Multiple waveforms: sine, square, triangle, sawtooth
+#### XY Pad Control
+- Interactive 2D control surface for real-time parameter manipulation
+- Assignable X/Y axes to any effect parameters
+- Visual feedback with orange indicator and crosshair guides
+- Perfect for live performance and creative sound design
+
+#### Effect Snapshots (A/B System)
+- Capture and switch between two complete effect states
+- Instant A/B comparison for quick effect evaluation
+- Copy snapshot A to B for iterative sound design
+- Full parameter state preservation
+
+#### LFO Modulation
+- Multiple waveforms: sine, square, triangle, sawtooth, random
 - Adjustable rate and depth
-- Target any effect parameter
-- Multiple simultaneous LFOs
+- **BPM Sync**: Lock to DAW tempo with note divisions (1/4, 1/8, 1/16, etc.)
+- Modulates filter cutoff with wide range (up to 3x variation)
 
-#### Macro Controls
-- Create custom macro knobs
-- Control multiple parameters simultaneously
-- Three curve types: linear, exponential, logarithmic
-- Perfect for live performance
-
-#### Effect Snapshots/Scenes
-- Save complete effect states
-- Instant recall or smooth crossfade between scenes
-- Export/import snapshots
-- Timestamped scene history
-
-### Optional Enhancements
-
-#### XY Pad
-- Morph between effects in real-time
-- Map X and Y axes to any parameters
-- Smooth interpolation
-- Multiple simultaneous pads
-
-#### Spectrum Analyzer
-- Real-time frequency analysis
-- FFT-based visualization
-- Peak frequency detection
-- RMS level metering
-
-#### Preset System
-- Save and load complete effect chains
-- Search presets by name or description
-- Export/import preset files
-- Organized preset library
-
-#### Sidechain Input
-- Sidechain filter/gate effects
-- Adjustable threshold and ratio
-- Attack and release controls
-- Perfect for ducking effects
-
-#### CI/CD Pipeline
-- Automated testing with GitHub Actions
-- Multi-platform builds (Node 18.x, 20.x)
-- Code coverage reporting
-- Automatic deployment
-
-#### Installer Packages
-- Cross-platform installers
-- macOS: DMG and ZIP
-- Windows: NSIS and portable
-- Linux: AppImage, DEB, and RPM
+### User Interface
+- **Compact Design**: 950x900 default window (was 1400x1020)
+- **Fully Resizable**: All controls scale proportionally (800-1400px width)
+- **DJ-Style Knobs**: Orange theme with value labels
+- **2x3 Grid Layout**: Filter, Reverb, Delay / Flanger, Isolator, LFO
+- **Top Control Bar**: Preset manager and snapshot controls
+- **Bottom Control**: XY pad with parameter assignment
 
 ## Distribution Formats
 
-FlarkDJ is available in multiple formats:
+### Native Audio Plugins ⭐ Recommended
 
-### TypeScript/JavaScript Package
+Professional-grade native C++ plugins built with JUCE framework:
+
+- **VST3** (Windows, macOS, Linux) - Universal DAW support
+- **LV2** (Linux) - Open-source plugin format
+- **Standalone** - Run as desktop application on all platforms
+
+**Platform Support:**
+- ✅ **Windows**: VST3 + Standalone (.exe)
+- ✅ **macOS**: VST3 + Standalone (.app)
+- ✅ **Linux**: VST3 + LV2 + Standalone
+
+**Automated Builds:**
+Multi-platform builds are automatically created via GitHub Actions CI/CD pipeline. Download pre-built binaries from [Releases](https://github.com/flarkflarkflark/FlarkDJ/releases).
+
+### TypeScript/JavaScript Package (Legacy)
 - npm package for Node.js and web applications
-- Full feature set including all advanced features
+- See TypeScript examples below for programmatic usage
 - Platform: Cross-platform (Node.js, browsers)
-
-### Native Audio Plugins
-- **VST3** (Windows, macOS, Linux)
-- **Audio Unit** (macOS)
-- **Standalone** application
-- Native C++ implementation for professional DAWs
-- See [`native/`](native/) for building instructions
-
-### Plugin Packages
-Pre-built wrappers for audio plugin formats:
-- VST3, AU, AAX, LV2, CLAP
-- See [`PLUGINS.md`](PLUGINS.md) for details
 
 ## Installation
 
-### npm Package
+### Native Plugins (Recommended)
+
+**Download Pre-Built Binaries:**
+1. Go to [Releases](https://github.com/flarkflarkflark/FlarkDJ/releases)
+2. Download the package for your platform
+3. Follow platform-specific instructions below
+
+#### Windows
+1. Extract `FlarkDJ-Windows-x64.zip`
+2. Copy `FlarkDJ.vst3` to `C:\Program Files\Common Files\VST3\`
+3. Copy `FlarkDJ.exe` anywhere for standalone use
+4. Rescan plugins in your DAW
+
+#### macOS
+1. Extract `FlarkDJ-macOS-Universal.zip`
+2. Copy `FlarkDJ.vst3` to `~/Library/Audio/Plug-Ins/VST3/`
+3. Copy `FlarkDJ.app` to `/Applications/` for standalone use
+4. Rescan plugins in your DAW
+
+#### Linux
+1. Extract: `tar xzf FlarkDJ-Linux-x86_64.tar.gz`
+2. Copy `FlarkDJ.vst3` to `~/.vst3/`
+3. Copy `FlarkDJ.lv2` to `~/.lv2/`
+4. Copy `FlarkDJ` to `~/bin/` or `/usr/local/bin/` for standalone use
+5. Rescan plugins in your DAW
+
+**Building from Source:**
+See [`native/BUILD.md`](native/BUILD.md) for detailed build instructions.
+
+### npm Package (Legacy)
 
 ```bash
 npm install flark-dj
 ```
 
-### Native Plugins
-
-See [`native/BUILD.md`](native/BUILD.md) for building instructions, or download pre-built binaries from [Releases](https://github.com/flarkflarkflark/FlarkDJ/releases).
-
 ## Quick Start
+
+### Using the Native Plugin
+
+1. **Load in DAW**: Add FlarkDJ to an audio track in your DAW
+2. **Choose Effects**: Enable desired effects with toggle buttons
+3. **Adjust Parameters**: Use knobs to dial in your sound
+4. **Save Preset**: Click "Save" to store your settings
+5. **Use XY Pad**: Drag the orange dot to morph parameters in real-time
+6. **A/B Compare**: Click "A" or "B" to switch between snapshots
+
+### DAW Compatibility
+
+FlarkDJ works in all major DAWs:
+- Ableton Live, FL Studio, Bitwig Studio
+- Logic Pro, GarageBand (macOS)
+- Cubase, Nuendo
+- Reaper, Studio One
+- Pro Tools (VST3)
+- Ardour, Mixbus (Linux)
+
+### TypeScript/npm Usage (Legacy)
 
 ```typescript
 import { FlarkDJ } from 'flark-dj';
@@ -261,27 +289,100 @@ npm run lint
 
 ## Architecture
 
+### Native Plugin Architecture
+
 ```
 FlarkDJ/
-├── src/
-│   ├── core/           # Audio engine
-│   ├── effects/        # Effect implementations
-│   ├── modulation/     # LFO, XY pad, macros
-│   ├── midi/           # MIDI learn system
-│   ├── presets/        # Preset management
-│   ├── snapshots/      # Scene management
-│   ├── analysis/       # Spectrum analyzer
-│   ├── plugin/         # Plugin wrappers (VST3, AU, etc.)
-│   └── types/          # TypeScript definitions
-├── native/
-│   ├── FlarkDJProcessor.*  # JUCE audio processor
-│   ├── FlarkDJEditor.*     # JUCE GUI editor
-│   ├── FlarkDJDSP.h        # C++ DSP implementations
-│   ├── CMakeLists.txt      # CMake build config
-│   └── BUILD.md            # Native build instructions
+├── native/                     # C++ native plugin implementation
+│   ├── FlarkDJProcessor.cpp/.h    # JUCE audio processor (DSP chain)
+│   ├── FlarkDJEditor.cpp/.h       # JUCE GUI editor
+│   ├── FlarkDJDSP.h               # DSP implementations:
+│   │                              #   - FlarkButterworthFilter
+│   │                              #   - FlarkReverb
+│   │                              #   - FlarkDelay
+│   │                              #   - FlarkFlanger
+│   │                              #   - FlarkDJIsolator
+│   │                              #   - FlarkLFO
+│   ├── CMakeLists.txt             # CMake build configuration
+│   ├── BUILD.md                   # Build instructions
+│   └── build/                     # Build artifacts (VST3, LV2, etc.)
+│
 ├── .github/
-│   └── workflows/      # CI/CD configuration
-└── scripts/            # Build scripts
+│   └── workflows/
+│       ├── build-native.yml       # Multi-platform builds (Win/Mac/Linux)
+│       └── ci.yml                 # TypeScript tests
+│
+├── src/                        # TypeScript/npm package (legacy)
+│   ├── core/                   # Audio engine
+│   ├── effects/                # Effect implementations
+│   └── types/                  # TypeScript definitions
+│
+└── scripts/                    # Build and release scripts
+```
+
+### Effect Processing Chain
+
+```
+Audio Input
+    ↓
+Filter (Butterworth) → Resonant filtering with LFO modulation
+    ↓
+Reverb → Algorithmic reverb with room/damping control
+    ↓
+Delay → Stereo delay with feedback
+    ↓
+Flanger → Modulation effect
+    ↓
+DJ Isolator → Frequency band sweeping
+    ↓
+Output Limiter → Soft limiting (tanh saturation @ -0.5dB)
+    ↓
+Audio Output
+```
+
+## Automated Builds & CI/CD
+
+FlarkDJ uses GitHub Actions to automatically build native plugins for all platforms:
+
+### Build Pipeline
+- **Triggers**: Push to main, pull requests, manual workflow dispatch
+- **Platforms**: Windows (Visual Studio 2022), macOS 13, Ubuntu Latest
+- **Artifacts**: Automatically uploaded with 30-day retention
+- **Releases**: Draft releases auto-created on main branch merges
+
+### Build Configuration
+- **Windows**: VST3 + Standalone (.exe)
+- **macOS**: VST3 + Standalone (.app) on macOS 13 runner
+- **Linux**: VST3 + LV2 + Standalone binary
+
+### JUCE Compatibility
+- **Framework**: JUCE 7.0.9
+- **macOS Runner**: Uses macOS 13 for JUCE 7.0.9 API compatibility
+- **Optimization**: Link-Time Optimization (LTO) enabled for all builds
+
+See [`.github/workflows/build-native.yml`](.github/workflows/build-native.yml) for full configuration.
+
+## Development
+
+### Building Locally
+
+See [`native/BUILD.md`](native/BUILD.md) for complete build instructions.
+
+**Quick build:**
+```bash
+cd native
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release --parallel
+```
+
+### Testing
+```bash
+# TypeScript tests
+npm test
+npm run test:coverage
+
+# Native plugin testing
+# Load in DAW or standalone app
 ```
 
 ## License

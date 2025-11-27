@@ -27,7 +27,8 @@ set(FLARKDJ_FORMATS VST3 Standalone)
 
 # Add platform-specific formats
 if(APPLE)
-    list(APPEND FLARKDJ_FORMATS AU)
+    # Skip AU for now to avoid build issues on CI
+    # list(APPEND FLARKDJ_FORMATS AU)
 elseif(UNIX AND NOT APPLE)
     # Linux only
     list(APPEND FLARKDJ_FORMATS LV2)

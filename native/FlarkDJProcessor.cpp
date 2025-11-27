@@ -325,6 +325,16 @@ void FlarkDJProcessor::processAudio(float* leftIn, float* rightIn,
             rightSample = isolatorRight.process(rightSample);
         }
 
+        // ========== OUTPUT LIMITER ==========
+        // Soft limiting to prevent clipping and channel muting in DAWs
+        // Uses tanh for smooth saturation with threshold at -0.5dB (~0.95)
+        const float threshold = 0.95f;
+        const float makeup = 1.0f / threshold; // Compensate for threshold reduction
+
+        // Soft clip using tanh for smooth saturation
+        leftSample = std::tanh(leftSample * makeup) * threshold;
+        rightSample = std::tanh(rightSample * makeup) * threshold;
+
         // Write to output
         leftOut[i] = leftSample;
         rightOut[i] = rightSample;

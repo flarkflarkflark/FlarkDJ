@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
+# FlarkDJ v1.1.0 - Multi-platform DJ effects plugin
 project(FlarkDJ VERSION 1.1.0)
 
 # Set C++ standard

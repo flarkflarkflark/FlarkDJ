@@ -10,7 +10,7 @@ import { ConnectionManager } from './interactions/connection-manager.js';
 import { ContextMenuHandler } from './interactions/context-menu.js';
 import { ConfigManager } from './utils/config-manager.js';
 import { UIController } from './ui/ui-controller.js';
-import { JUCEBridge } from './juce-bridge.js';
+import { ElectronBridge } from './electron-bridge.js';
 
 class FlarkDJPedalboard {
   constructor() {
@@ -21,7 +21,7 @@ class FlarkDJPedalboard {
     this.contextMenuHandler = null;
     this.configManager = null;
     this.uiController = null;
-    this.juceBridge = null;
+    this.electronBridge = null;
 
     this.initialized = false;
   }
@@ -54,10 +54,10 @@ class FlarkDJPedalboard {
       // Load saved configurations
       this.configManager.loadConfigurations();
 
-      // Setup JUCE integration if running in JUCE plugin
-      if (JUCEBridge.isJUCE()) {
-        this.juceBridge = new JUCEBridge(this);
-        console.log('🔌 Running in JUCE Plugin mode');
+      // Setup Electron integration if running in Electron
+      if (ElectronBridge.isElectron()) {
+        this.electronBridge = new ElectronBridge(this);
+        console.log('🖥️  Running in Electron mode');
       }
 
       this.initialized = true;

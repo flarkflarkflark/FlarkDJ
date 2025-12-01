@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlarkDJ Pedalboard - Visual Effect Chain Designer</title>
+  <link rel="stylesheet" href="assets/styles/pedalboard.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <h1>🎛️ FlarkDJ Pedalboard</h1>
+      <p class="tagline">Visual Effect Chain Designer</p>
+    </div>
+    <div class="header-right">
+      <button id="saveBtn" class="btn btn-save" title="Save Configuration">
+        <span>💾 Save</span>
+      </button>
+      <button id="loadBtn" class="btn btn-load" title="Load Configuration">
+        <span>📁 Load</span>
+      </button>
+      <button id="clearBtn" class="btn btn-clear" title="Clear Board">
+        <span>🗑️ Clear</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="main-container">
+    <!-- Left Sidebar - Effect Palette -->
+    <aside class="effect-palette">
+      <h2>Effects</h2>
+      <div class="palette-scroll">
+        <!-- Audio Source -->
+        <div class="palette-section">
+          <h3>Audio Source</h3>
+          <div class="palette-item" draggable="true" data-effect-type="input">
+            <div class="effect-icon">🎤</div>
+            <span class="effect-name">Audio Input</span>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="palette-section">
+          <h3>Filters</h3>
+          <div class="palette-item" draggable="true" data-effect-type="butterworth-filter">
+            <div class="effect-icon">🔊</div>
+            <span class="effect-name">Butterworth Filter</span>
+          </div>
+          <div class="palette-item" draggable="true" data-effect-type="dj-isolator">
+            <div class="effect-icon">🎚️</div>
+            <span class="effect-name">DJ Isolator</span>
+          </div>
+        </div>
+
+        <!-- Time-Based Effects -->
+        <div class="palette-section">
+          <h3>Time Effects</h3>
+          <div class="palette-item" draggable="true" data-effect-type="reverb">
+            <div class="effect-icon">🌊</div>
+            <span class="effect-name">Reverb</span>
+          </div>
+          <div class="palette-item" draggable="true" data-effect-type="delay">
+            <div class="effect-icon">🔁</div>
+            <span class="effect-name">Delay</span>
+          </div>
+        </div>
+
+        <!-- Modulation Effects -->
+        <div class="palette-section">
+          <h3>Modulation</h3>
+          <div class="palette-item" draggable="true" data-effect-type="flanger">
+            <div class="effect-icon">〰️</div>
+            <span class="effect-name">Flanger</span>
+          </div>
+          <div class="palette-item" draggable="true" data-effect-type="lfo">
+            <div class="effect-icon">📈</div>
+            <span class="effect-name">LFO</span>
+          </div>
+        </div>
+
+        <!-- Output -->
+        <div class="palette-section">
+          <h3>Output</h3>
+          <div class="palette-item" draggable="true" data-effect-type="output">
+            <div class="effect-icon">🔈</div>
+            <span class="effect-name">Audio Output</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Center - Pedalboard Canvas -->
+    <main class="pedalboard-canvas">
+      <div id="pedalboard" class="pedalboard">
+        <!-- SVG overlay for cables -->
+        <svg id="cableLayer" class="cable-layer">
+          <defs>
+            <!-- Cable shadow filter -->
+            <filter id="cableShadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+              <feOffset dx="2" dy="2" result="offsetblur"/>
+              <feComponentTransfer>
+                <feFuncA type="linear" slope="0.3"/>
+              </feComponentTransfer>
+              <feMerge>
+                <feMergeNode/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+        </svg>
+
+        <!-- Effect pedals will be dynamically added here -->
+        <div id="effectContainer" class="effect-container"></div>
+
+        <!-- Drop zone indicator -->
+        <div id="dropZone" class="drop-zone hidden">
+          <div class="drop-zone-content">
+            <span class="drop-icon">⬇️</span>
+            <span class="drop-text">Drop effect here</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Right Sidebar - Audio Controls -->
+    <aside class="audio-controls">
+      <h2>Audio Control</h2>
+
+      <!-- Audio Source Selection -->
+      <section class="control-section">
+        <h3>Input Source</h3>
+        <div class="source-selector">
+          <label class="radio-label">
+            <input type="radio" name="audioSource" value="none" checked>
+            <span>None</span>
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="audioSource" value="microphone">
+            <span>🎤 Microphone</span>
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="audioSource" value="file">
+            <span>📁 Audio File</span>
+          </label>
+        </div>
+        <input type="file" id="audioFileInput" accept="audio/*" class="hidden">
+        <button id="selectFileBtn" class="btn btn-secondary btn-block hidden">
+          Select Audio File
+        </button>
+      </section>
+
+      <!-- Playback Controls -->
+      <section class="control-section">
+        <h3>Playback</h3>
+        <div class="playback-controls">
+          <button id="playBtn" class="btn btn-primary btn-block" disabled>
+            ▶️ Play
+          </button>
+          <button id="pauseBtn" class="btn btn-secondary btn-block hidden">
+            ⏸️ Pause
+          </button>
+          <button id="stopBtn" class="btn btn-secondary btn-block" disabled>
+            ⏹️ Stop
+          </button>
+        </div>
+      </section>
+
+      <!-- Master Volume -->
+      <section class="control-section">
+        <h3>Master Volume</h3>
+        <div class="volume-control">
+          <input type="range" id="masterVolume" min="0" max="100" value="75" class="slider">
+          <span id="volumeValue" class="value-display">75%</span>
+        </div>
+      </section>
+
+      <!-- VU Meter -->
+      <section class="control-section">
+        <h3>Level Meter</h3>
+        <div class="vu-meter">
+          <div class="vu-bar">
+            <div id="vuMeterLeft" class="vu-level"></div>
+          </div>
+          <div class="vu-bar">
+            <div id="vuMeterRight" class="vu-level"></div>
+          </div>
+        </div>
+        <div class="vu-labels">
+          <span>L</span>
+          <span>R</span>
+        </div>
+      </section>
+
+      <!-- Info Section -->
+      <section class="control-section info-section">
+        <h3>ℹ️ How to Use</h3>
+        <ol class="info-list">
+          <li>Drag effects from the left palette</li>
+          <li>Drop them onto the canvas</li>
+          <li>Click output jacks to create cables</li>
+          <li>Adjust knobs in real-time</li>
+          <li>Save your chain for later!</li>
+        </ol>
+      </section>
+    </aside>
+  </div>
+
+  <!-- Context Menu for Connections -->
+  <nav id="contextMenu" class="context-menu hidden">
+    <ul class="context-menu-items">
+      <li class="context-menu-item" data-action="disconnect">
+        <span>🔌 Disconnect</span>
+      </li>
+      <li class="context-menu-item" data-action="delete">
+        <span>🗑️ Delete Effect</span>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Modal for Load Configuration -->
+  <div id="loadModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Load Configuration</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <select id="configSelect" class="config-select" size="8">
+          <!-- Configurations will be populated here -->
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button id="loadConfigBtn" class="btn btn-primary">Load</button>
+        <button id="deleteConfigBtn" class="btn btn-danger">Delete</button>
+        <button class="btn btn-secondary modal-close">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
